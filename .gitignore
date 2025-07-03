@@ -1,0 +1,13 @@
+.env
+__pycache__/
+*.pyc
+.DS_Store
+venv/
+.vscode/
+
+# Generated files
+archive/
+charts/
+*.html
+*.log
+untranslated_indicators.txt

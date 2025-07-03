@@ -1,0 +1,246 @@
+body {
+    font-family: 'Arial', sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f4;
+    color: #333;
+}
+
+.container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 20px auto;
+    background-color: #fff;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+}
+
+header {
+    text-align: center;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 20px;
+}
+
+header h1 {
+    margin: 0;
+    color: #333;
+}
+
+.report-date {
+    color: #666;
+    font-size: 0.9em;
+}
+
+section {
+    margin-bottom: 30px;
+}
+
+h2 {
+    color: #0056b3;
+    border-bottom: 2px solid #0056b3;
+    padding-bottom: 5px;
+    margin-bottom: 15px;
+}
+
+h3 {
+    color: #0056b3;
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+table th, table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+table th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+}
+
+.positive {
+    color: green;
+    font-weight: bold;
+}
+
+.negative {
+    color: red;
+    font-weight: bold;
+}
+
+.chart-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+}
+
+.chart-item {
+    flex: 1 1 calc(50% - 20px); /* 2 columns, with gap */
+    box-sizing: border-box;
+    text-align: center;
+    background-color: #f9f9f9;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.chart-item img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.commentary-content {
+    background-color: #f9f9f9;
+    padding: 15px;
+    border-left: 5px solid #0056b3;
+    margin-bottom: 20px;
+    border-radius: 4px;
+}
+
+.news ul {
+    list-style: none;
+    padding: 0;
+}
+
+.news li {
+    margin-bottom: 10px;
+    padding-left: 15px;
+    position: relative;
+}
+
+.news li::before {
+    content: '•';
+    color: #0056b3;
+    position: absolute;
+    left: 0;
+}
+
+.news a {
+    color: #0056b3;
+    text-decoration: none;
+}
+
+.news a:hover {
+    text-decoration: underline;
+}
+
+footer {
+    text-align: center;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+    margin-top: 20px;
+    color: #666;
+    font-size: 0.9em;
+}
+
+/* Tabbed Chart Styles */
+.tabs {
+    margin-top: 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.tab-buttons {
+    display: flex;
+    border-bottom: 1px solid #ddd;
+    background-color: #f2f2f2;
+}
+
+.tab-button {
+    flex: 1;
+    padding: 12px 15px;
+    cursor: pointer;
+    border: none;
+    background-color: transparent;
+    font-size: 1em;
+    font-weight: bold;
+    color: #555;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    text-align: center;
+    border-right: 1px solid #eee; /* ボタン間の区切り線 */
+}
+
+.tab-button:last-child {
+    border-right: none;
+}
+
+.tab-button:hover {
+    background-color: #e9e9e9;
+}
+
+.tab-button.active {
+    background-color: #fff;
+    color: #0056b3;
+    border-bottom: 3px solid #0056b3;
+    margin-bottom: -1px; /* border-bottomが重なるのを防ぐ */
+}
+
+.tab-contents {
+    padding: 15px;
+    background-color: #fff;
+}
+
+.tab-content {
+    display: block; /* デフォルトで表示 */
+}
+
+.tab-content.hidden {
+    display: none;
+}
+
+.chart-image-container {
+    width: 100%; /* 親要素の幅いっぱいに広がる */
+    /* height は img 要素に任せる */
+    background-size: cover; /* img タグを使用しているため、このプロパティは不要ですが、念のため残します */
+    background-position: center; /* img タグを使用しているため、このプロパティは不要ですが、念のため残します */
+    background-repeat: no-repeat; /* img タグを使用しているため、このプロパティは不要ですが、念のため残します */
+    max-width: 800px; /* チャートコンテナの最大幅を設定 */
+    margin: 0 auto; /* 中央寄せ */
+}
+
+.chart-image-container img {
+    width: 100%;
+    height: auto; /* 縦横比を維持 */
+    /* max-height: 400px; */ /* 削除 */
+    display: block; /* 余白をなくす */
+    object-fit: contain; /* 画像全体が表示されるように調整 */
+}
+
+
+.sector-chart-container {
+    text-align: center;
+    margin-top: 15px;
+    padding: 15px;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+}
+
+.sector-chart-container img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+}
+
+/* Sortable Table Headers */
+table th.sortable { cursor: pointer; }
+.sort-arrow { margin-left: 4px; font-size: 0.75em; }
+th.asc .sort-arrow::after { content: '▲'; }
+th.desc .sort-arrow::after { content: '▼'; }

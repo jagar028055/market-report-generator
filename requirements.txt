@@ -1,0 +1,14 @@
+yfinance
+investpy
+requests
+beautifulsoup4
+google-generativeai
+matplotlib
+mplfinance
+markdown
+plotly
+pandas
+Jinja2
+python-dotenv
+selenium
+webdriver-manager
