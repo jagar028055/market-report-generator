@@ -104,21 +104,33 @@ def main():
 
     # 5. HTMLレポート生成
     print("\n[5/5] HTMLレポート生成中...")
-    # 絶対パスで指定
-    html_gen = HTMLGenerator(
-        template_dir=os.path.join(base_dir, "templates"),
-        output_dir=base_dir
-    )
-    report_filepath = html_gen.generate_report(
-        market_data=market_data,
-        economic_indicators=economic_indicators,
-        sector_performance=sector_performance,
-        news_articles=news_articles,
-        commentary=commentary,
-        grouped_charts=grouped_charts, # タイムスタンプ付きのパスはhtml_generatorで付与される
-        sector_chart_path=f"charts/{os.path.basename(sector_chart_path)}" if sector_chart_path else None
-    )
-    print("HTMLレポート生成完了。")
+    try:
+        # 絶対パスで指定
+        html_gen = HTMLGenerator(
+            template_dir=os.path.join(base_dir, "templates"),
+            output_dir=base_dir
+        )
+        report_filepath = html_gen.generate_report(
+            market_data=market_data,
+            economic_indicators=economic_indicators,
+            sector_performance=sector_performance,
+            news_articles=news_articles,
+            commentary=commentary,
+            grouped_charts=grouped_charts, # タイムスタンプ付きのパスはhtml_generatorで付与される
+            sector_chart_path=f"charts/{os.path.basename(sector_chart_path)}" if sector_chart_path else None
+        )
+        print("HTMLレポート生成完了。")
+    except Exception as e:
+        import traceback
+        print(f"--- HTMLレポート生成中にエラーが発生しました ---")
+        print(f"エラータイプ: {type(e).__name__}")
+        print(f"エラーメッセージ: {e}")
+        print("--- トレースバック ---")
+        traceback.print_exc()
+        print("--------------------")
+        # エラーが発生したことを示すために、Noneを返すか、あるいは例外を再送出する
+        # ここではプロセスを終了させるために例外を再送出します
+        raise
 
     print("\n--- 米国マーケットレポート生成完了 ---")
     print(f"レポートは '{report_filepath}' に出力されました。")
