@@ -106,8 +106,12 @@ def main():
     print("\n[5/5] HTMLレポート生成中...")
     try:
         # 絶対パスで指定
+        template_directory = os.path.join(base_dir, "templates")
+        print(f"--- [DEBUG] Template directory path: {template_directory} ---")
+        print(f"--- [DEBUG] Does template directory exist? {os.path.isdir(template_directory)} ---")
+        print(f"--- [DEBUG] Files in template directory: {os.listdir(template_directory)} ---")
         html_gen = HTMLGenerator(
-            template_dir=os.path.join(base_dir, "templates"),
+            template_dir=template_directory,
             output_dir=base_dir
         )
         report_filepath = html_gen.generate_report(
