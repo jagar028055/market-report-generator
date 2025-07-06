@@ -4,17 +4,19 @@ import os
 from datetime import datetime
 
 class HTMLGenerator:
-    def __init__(self, template_dir="templates", output_dir="."): # パスを修正
-        self.template_dir = template_dir
+    def __init__(self, output_dir="."):
+        # このファイルの場所を基準にtemplatesディレクトリへの絶対パスを構築
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        self.template_dir = os.path.join(base_dir, 'templates')
         self.output_dir = output_dir
-        self.env = Environment(loader=FileSystemLoader(template_dir))
+        # FileSystemLoaderには絶対パスを渡す
+        self.env = Environment(loader=FileSystemLoader(self.template_dir))
 
     def generate_report(self, market_data: dict, economic_indicators: dict, sector_performance: dict, news_articles: list, commentary: str, grouped_charts: dict, sector_chart_path: str = None):
         """
         収集したデータをHTMLレポートとして生成する。
         """
-        # テンプレート環境を再初期化してキャッシュをクリア
-        self.env = Environment(loader=FileSystemLoader(self.template_dir))
+        # __init__でenvが初期化されているので、再初期化は不要
         template = self.env.get_template('report_template.html')
         
         report_date = datetime.now().strftime("%Y年%m月%d日")
