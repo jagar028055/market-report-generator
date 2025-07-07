@@ -26,7 +26,7 @@ jobs:
       - name: Run script
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        run: python debug_path.py
+        run: python main.py
 
       - name: Commit and push report
         run: |
