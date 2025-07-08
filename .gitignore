@@ -8,6 +8,6 @@ venv/
 # Generated files
 archive/
 charts/
-*.html
+market_report.html
 *.log
 untranslated_indicators.txt

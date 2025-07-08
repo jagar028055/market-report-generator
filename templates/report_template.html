@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>米国マーケットレポート - {{ report_date }}</title>
+    <link rel="stylesheet" href="{{ css_path }}"> {# CSSパスをJinja2変数で受け取る #}
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>米国マーケットレポート</h1>
+            <p class="report-date">{{ report_date }}</p>
+        </header>
+
+        <section class="market-summary">
+            <h2>主要指標</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>指標</th>
+                        <th>直近値</th>
+                        <th>前日比</th>
+                        <th>変化率</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for name, data in market_data.items() %}
+                    <tr>
+                        <td>{{ name }}</td>
+                        <td>{{ data.current }}</td>
+                        <td>
+                            {% if data.change is defined and data.change != 'N/A' %}
+                                {% if data.change | float > 0 %}<span class="positive">{{ data.change }}</span>
+                                {% elif data.change | float < 0 %}<span class="negative">{{ data.change }}</span>
+                                {% else %}{{ data.change }}
+                                {% endif %}
+                            {% else %}
+                                {{ data.change }}
+                            {% endif %}
+                            {% if data.change_bp is defined and data.change_bp != 'N/A' %}
+                                ({{ data.change_bp }}bp)
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if data.change_percent is defined and data.change_percent != 'N/A' %}
+                                {% if data.change_percent | replace('%', '') | float > 0 %}<span class="positive">{{ data.change_percent }}</span>
+                                {% elif data.change_percent | replace('%', '') | float < 0 %}<span class="negative">{{ data.change_percent }}</span>
+                                {% else %}{{ data.change_percent }}
+                                {% endif %}
+                            {% else %}
+                                {{ data.change_percent }}
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+
+        <section class="economic-indicators">
+            <h2>経済指標</h2>
+            <h3>前日発表された経済指標</h3>
+            {% if economic_indicators.yesterday %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>時刻</th>
+                        <th>イベント</th>
+                        <th>前回値</th>
+                        <th>発表値</th>
+                        <th>予想値</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in economic_indicators.yesterday %}
+                    <tr>
+                        <td>{{ item.time }}</td>
+                        <td>{{ item.name }}</td>
+                        <td>{{ item.previous if item.previous is not none else 'N/A' }}</td>
+                        <td>{{ item.actual if item.actual is not none else 'N/A' }}</td>
+                        <td>{{ item.forecast if item.forecast is not none else 'N/A' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p>前日発表された経済指標はありません。</p>
+            {% endif %}
+
+            <h3>本日発表予定の経済指標</h3>
+            {% if economic_indicators.today_scheduled %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>時刻</th>
+                        <th>イベント</th>
+                        <th>前回値</th>
+                        <th>予想値</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in economic_indicators.today_scheduled %}
+                    <tr>
+                        <td>{{ item.time }}</td>
+                        <td>{{ item.name }}</td>
+                        <td>{{ item.previous if item.previous is not none else 'N/A' }}</td>
+                        <td>{{ item.forecast if item.forecast is not none else 'N/A' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p>本日発表予定の経済指標はありません。</p>
+            {% endif %}
+        </section>
+
+        <section class="sector-performance">
+            <h2>米国セクターETF変化率</h2>
+            {% if sector_chart_path %}
+            <div class="sector-chart-container">
+                {% if 'html' in sector_chart_path.lower() %}
+                    <iframe src="{{ sector_chart_path }}" width="100%" height="600" frameborder="0"></iframe>
+                {% else %}
+                    <img src="{{ sector_chart_path }}" alt="Sector Performance Chart">
+                {% endif %}
+            </div>
+            {% else %}
+            <p>セクター別ETFのチャートは現在利用できません。</p>
+            {% endif %}
+        </section>
+
+        <section class="charts">
+            <h2>チャート</h2>
+            {% for chart_type, charts in grouped_charts.items() %}
+            <div class="chart-section">
+                <h3>{{ chart_type }}チャート</h3>
+                <div class="tabs">
+                    <div class="tab-buttons">
+                        {% for chart in charts %}
+                        <button class="tab-button {% if loop.first %}active{% endif %}" data-tab-target="{{ chart.id }}">{{ chart.name }}</button>
+                        {% endfor %}
+                    </div>
+                    <div class="tab-contents">
+                        {% for chart in charts %}
+                        <div id="{{ chart.id }}" class="tab-content {% if not loop.first %}hidden{% endif %}" {% if not chart.interactive %}data-src="{{ chart.path_with_buster }}"{% endif %}> 
+                             {% if chart.interactive %}
+                                 <iframe src="{{ chart.path_with_buster }}" width="100%" height="650" frameborder="0"></iframe>
+                             {% else %}
+                                 <img src="" alt="{{ chart.name }} Chart"> 
+                             {% endif %}
+                         </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </section>
+
+        <section class="market-commentary">
+            <h2>マーケットコメント</h2>
+            <div class="commentary-content">
+                {{ commentary | safe }}
+            </div>
+        </section>
+
+        <section class="news">
+            <h2>マーケットニュース</h2>
+            <div class="news-filter">
+                <label for="countryFilter">国でフィルター:</label>
+                <select id="countryFilter">
+                    <option value="ALL">ALL</option>
+                </select>
+            </div>
+            {% if news_articles %}
+            <table>
+                <thead>
+                    <tr>
+                        <th data-type="date" class="sortable asc">時刻<span class="sort-arrow"></span></th>
+                        <th data-type="string" class="sortable">国<span class="sort-arrow"></span></th>
+                        <th data-type="string" class="sortable">タイトル<span class="sort-arrow"></span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for article in news_articles %}
+                    <tr>
+                        <td>{{ article.published_jst.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td>{{ article.country }}</td>
+                        <td><a href="{{ article.url }}" target="_blank">{{ article.title }}</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p>取得できるニュース記事はありませんでした。</p>
+            {% endif %}
+        </section>
+
+        <footer>
+            <p>&copy; {{ report_date.split('年')[0] }} 米国マーケットレポート</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const chartSections = document.querySelectorAll('.chart-section');
+
+            tabButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const tabSection = this.closest('.chart-section');
+                    const tabContents = tabSection.querySelectorAll('.tab-content');
+                    const tabButtonsInSection = tabSection.querySelectorAll('.tab-button');
+
+                    // Remove active class from all buttons in this section
+                    tabButtonsInSection.forEach(btn => btn.classList.remove('active'));
+                    // Add active class to the clicked button
+                    this.classList.add('active');
+
+                    // Hide all tab contents in this section
+                    tabContents.forEach(content => content.classList.add('hidden'));
+
+                    // Show the target tab content
+                    const targetId = this.dataset.tabTarget;
+                    const targetContent = tabSection.querySelector(`#${targetId}`);
+                    if (targetContent) {
+                        targetContent.classList.remove('hidden');
+                        // 画像のsrcを更新して再読み込みを強制
+                        const imgElement = targetContent.querySelector('img');
+                        console.log(`[DEBUG] Tab clicked: ${this.dataset.tabTarget}`);
+                        console.log(`[DEBUG] imgElement found: ${!!imgElement}`);
+
+                        if (imgElement) {
+                            const originalDataSrc = targetContent.dataset.src.split('?')[0]; // data-srcから元のパスを取得
+                            const cacheBuster = new Date().getTime();
+                            const newSrc = `${originalDataSrc}?v=${cacheBuster}`;
+                            
+                            console.log(`[DEBUG] Original data-src: ${originalDataSrc}`);
+                            console.log(`[DEBUG] New src with cache buster: ${newSrc}`);
+
+                            imgElement.src = newSrc; // srcを更新
+                            console.log(`[DEBUG] img.src set to: ${imgElement.src}`);
+                        } else {
+                            console.log("[DEBUG] imgElement not found for the target content.");
+                        }
+                    } else {
+                        console.log(`[DEBUG] Target content not found for ID: ${targetId}`);
+                    }
+                });
+            });
+
+            // 初期表示時に各セクションの最初のタブをアクティブにする
+            chartSections.forEach(section => {
+                const firstButton = section.querySelector('.tab-button');
+                if (firstButton) {
+                    const targetId = firstButton.dataset.tabTarget;
+                    const targetContent = section.querySelector(`#${targetId}`);
+                    if (targetContent) {
+                        targetContent.classList.remove('hidden');
+                        const imgElement = targetContent.querySelector('img');
+                        if (imgElement) {
+                            const originalDataSrc = targetContent.dataset.src.split('?')[0];
+                            const cacheBuster = new Date().getTime();
+                            imgElement.src = `${originalDataSrc}?v=${cacheBuster}`;
+                        }
+                    }
+                }
+            });
+
+            /* ---------- News Table Sorting ---------- */
+            const newsTable = document.querySelector('.news table');
+            if (newsTable) {
+                const headers = newsTable.querySelectorAll('th.sortable');
+                headers.forEach((th, index) => {
+                    th.addEventListener('click', () => {
+                        const tbody = newsTable.querySelector('tbody');
+                        const rows = Array.from(tbody.querySelectorAll('tr'));
+                        const ascending = !(th.classList.contains('asc'));
+                        headers.forEach(h => h.classList.remove('asc', 'desc'));
+                        th.classList.add(ascending ? 'asc' : 'desc');
+                        const type = th.dataset.type || 'string';
+                        rows.sort((a, b) => {
+                            const aText = a.children[index].textContent.trim();
+                            const bText = b.children[index].textContent.trim();
+                            if (type === 'date') {
+                                return ascending ? (new Date(aText) - new Date(bText)) : (new Date(bText) - new Date(aText));
+                            }
+                            return ascending ? aText.localeCompare(bText) : bText.localeCompare(aText);
+                        });
+                        tbody.append(...rows);
+                    });
+                });
+            }
+
+            /* ---------- Country Filter ---------- */
+            if (newsTable) {
+                const filter = document.getElementById('countryFilter');
+                const tbody = newsTable.querySelector('tbody');
+                const countrySet = new Set();
+                tbody.querySelectorAll('tr').forEach(tr => {
+                    const code = tr.children[1].textContent.trim();
+                    countrySet.add(code);
+                });
+                [...countrySet].sort().forEach(code => {
+                    const opt = document.createElement('option');
+                    opt.value = code; opt.textContent = code;
+                    filter.appendChild(opt);
+                });
+                filter.addEventListener('change', () => {
+                    const val = filter.value;
+                    tbody.querySelectorAll('tr').forEach(tr => {
+                        const code = tr.children[1].textContent.trim();
+                        tr.style.display = (val === 'ALL' || code === val) ? '' : 'none';
+                    });
+                });
+            }
+
+        });
+    </script>
+</body>
+</html>
