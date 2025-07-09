@@ -8,6 +8,13 @@ class HTMLGenerator:
         # このファイルの場所を基準にtemplatesディレクトリへの絶対パスを構築
         base_dir = os.path.dirname(os.path.abspath(__file__))
         self.template_dir = os.path.join(base_dir, 'templates')
+
+        # --- デバッグコード ---
+        print(f"DEBUG: Template directory path: {self.template_dir}")
+        print(f"DEBUG: Template directory exists: {os.path.exists(self.template_dir)}")
+        print(f"DEBUG: Template file exists: {os.path.exists(os.path.join(self.template_dir, 'report_template.html'))}")
+        # --- デバッグコード終了 ---
+
         self.output_dir = output_dir
         # FileSystemLoaderには絶対パスを渡す
         self.env = Environment(loader=FileSystemLoader(self.template_dir))
