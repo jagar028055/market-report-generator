@@ -4,11 +4,11 @@ import os
 from datetime import datetime
 
 class HTMLGenerator:
-    def __init__(self, output_dir="."):
+    def __init__(self, output_dir=".", report_filename="market_report.html"):
         # このファイルの場所を基準にtemplatesディレクトリへの絶対パスを構築
         base_dir = os.path.dirname(os.path.abspath(__file__))
         self.template_dir = os.path.join(base_dir, 'templates')
-
+        self.report_filename = report_filename
         self.output_dir = output_dir
         # FileSystemLoaderには絶対パスを渡す
         self.env = Environment(loader=FileSystemLoader(self.template_dir))
@@ -57,7 +57,7 @@ class HTMLGenerator:
             css_path=css_path # CSSパスをテンプレートに渡す
         )
 
-        output_filepath = os.path.join(self.output_dir, "market_report.html")
+        output_filepath = os.path.join(self.output_dir, self.report_filename)
         with open(output_filepath, "w", encoding="utf-8") as f:
             f.write(output_html)
         print(f"HTML report generated at {output_filepath}")

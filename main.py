@@ -68,7 +68,7 @@ def original_main():
     print("セクター別ETFチャート生成完了。")
 
     print("\n[5/5] HTMLレポート生成中...")
-    html_gen = HTMLGenerator(output_dir=base_dir)
+    html_gen = HTMLGenerator(output_dir=base_dir, report_filename="index.html")
     report_filepath = html_gen.generate_report(
         market_data=market_data, economic_indicators=economic_indicators, sector_performance=sector_performance,
         news_articles=news_articles, commentary=commentary, grouped_charts=grouped_charts,

@@ -45,7 +45,7 @@ jobs:
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          git add -f market_report.html charts/
+          git add -f index.html charts/
           # 変更があった場合のみコミット
           if ! git diff --staged --quiet; then
             git commit -m "Update market report for $(date +'%Y-%m-%d')"
