@@ -1,0 +1,160 @@
+# Market Report Generator Configuration
+# 設定をカスタマイズする場合は、この値を変更してください
+
+# 環境設定
+environment: "development"  # development/production
+
+# データ取得設定
+data_fetching:
+  intraday_interval: "5m"
+  intraday_period_days: 7
+  chart_longterm_period: "1y"
+  target_calendar_countries: ['united states']
+
+# Webスクレイピング設定
+web_scraping:
+  user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36"
+  webdriver_implicit_wait: 15
+  webdriver_page_load_timeout: 120
+  scraping_delay_seconds: 7
+  page_delay_seconds: 1
+  http_request_timeout: 15
+
+# Reuters設定
+reuters:
+  base_url: "https://jp.reuters.com"
+  search_url: "https://jp.reuters.com/site-search/"
+  search_query: "米国市場 OR 金融 OR 経済 OR 株価 OR FRB OR FOMC OR 決算 OR 利上げ OR インフレ"
+  target_categories:
+    - "ビジネスcategory"
+    - "マーケットcategory"
+    - "トップニュースcategory"
+    - "ワールドcategory"
+    - "テクノロジーcategory"
+    - "アジア市場category"
+    - "不明"
+    - "経済category"
+  exclude_keywords:
+    - "スポーツ"
+    - "エンタメ"
+    - "五輪"
+    - "サッカー"
+    - "映画"
+    - "将棋"
+    - "囲碁"
+    - "芸能"
+    - "ライフ"
+    - "アングル："
+  max_pages: 5
+
+# AI設定
+ai:
+  preferred_models:
+    - 'models/gemini-2.5-flash-lite-preview-06-17'
+    - 'models/gemini-2.5-flash-preview-05-20'
+  text_limit: 1800
+
+# ニュース設定
+news:
+  hours_limit: 24
+  max_pages: 5
+
+# ファイル設定
+files:
+  report_filename: "index.html"
+  default_report_filename: "market_report.html"
+  css_path: "static/style.css"
+
+# チャート設定
+charts:
+  width: 1200
+  height: 600
+  dpi: 150
+  plotly_js_source: 'cdn'
+  matplotlib_figure_size: [12, 6]
+  
+  # 日本語フォントパス（macOS用）
+  japanese_font_paths:
+    - '/System/Library/Fonts/ヒラギノ角ゴ ProN W3.ttc'
+    - '/System/Library/Fonts/Hiragino Sans/Hiragino Sans W3.ttc'
+    - '/System/Library/Fonts/Supplemental/ヒラギノ角ゴ ProN W3.ttc'
+    - '/System/Library/Fonts/Supplemental/Hiragino Sans GB.ttc'
+    - '/System/Library/Fonts/Supplemental/AppleGothic.ttf'
+    - '/Library/Fonts/Osaka.ttf'
+    - '/System/Library/Fonts/ヒラギノ丸ゴ ProN W4.ttc'
+    - '/System/Library/Fonts/ヒラギノ明朝 ProN W3.ttc'
+
+  # 移動平均設定
+  moving_averages:
+    short:
+      period: 25
+      color: "blue"
+      label: "MA25"
+    medium:
+      period: 50
+      color: "orange"
+      label: "MA50"
+    long:
+      period: 75
+      color: "red"
+      label: "MA75"
+  
+  default_ma_display: ["short", "long"]
+  default_ma_type: "SMA"
+
+# Markdown設定
+markdown:
+  extensions: ['extra', 'nl2br', 'sane_lists']
+
+# パフォーマンス設定
+performance:
+  max_workers: 4
+  timeout_seconds: 30
+  retry_attempts: 3
+  retry_wait_min: 4
+  retry_wait_max: 10
+
+# ログ設定
+logging:
+  level: "INFO"  # DEBUG/INFO/WARNING/ERROR
+  file: "execution.log"
+  backup_count: 7
+  max_bytes: 10485760  # 10MB
+
+# リソース制限
+resources:
+  max_memory_mb: 512
+  max_disk_space_mb: 1024
+
+# マーケットティッカー設定
+market_tickers:
+  "S&P500": "^GSPC"
+  "NASDAQ100": "^NDX"
+  "ダウ30": "^DJI"
+  "SOX": "^SOX"
+  "10年債": "^TNX"
+  "VIX": "^VIX"
+  "ドル円": "JPY=X"
+  "ユーロドル": "EURUSD=X"
+  "ビットコイン": "BTC-USD"
+  "金": "GC=F"
+  "原油": "CL=F"
+
+# セクターETF設定
+sector_etfs:
+  "XLK": "Technology Select Sector SPDR Fund"
+  "XLF": "Financial Select Sector SPDR Fund"
+  "XLY": "Consumer Discretionary Select Sector SPDR Fund"
+  "XLP": "Consumer Staples Select Sector SPDR Fund"
+  "XLE": "Energy Select Sector SPDR Fund"
+  "XLV": "Health Care Select Sector SPDR Fund"
+  "XLI": "Industrial Select Sector SPDR Fund"
+  "XLB": "Materials Select Sector SPDR Fund"
+  "XLRE": "Real Estate Select Sector SPDR Fund"
+  "XLU": "Utilities Select Sector SPDR Fund"
+  "XLC": "Communication Services Select Sector SPDR Fund"
+
+# 資産分類
+asset_classes:
+  US_STOCK: ["^GSPC", "^DJI", "^NDX", "^SOX", "^TNX", "^VIX"]
+  24H_ASSET: ["JPY=X", "EURUSD=X", "BTC-USD", "GC=F", "CL=F"]

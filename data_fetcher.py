@@ -24,8 +24,10 @@ class DataFetcher:
             "NASDAQ100": "^NDX",
             "ダウ30": "^DJI",
             "SOX": "^SOX",
-            "米国2年金利": "^TNX", 
+            "日経225": "^N225",
+            "米国2年金利": "^IRX", 
             "米国10年金利": "^TNX",
+            "DXYドル指数": "DX-Y.NYB",
             "ドル円": "JPY=X",
             "ユーロドル": "EURUSD=X",
             "ビットコイン": "BTC-USD",
@@ -142,24 +144,40 @@ class DataFetcher:
             print(f"--- Market Data: Fetching {name} ({ticker}) ---")
             try:
                 if name == "米国2年金利":
-                    data = investpy.get_bond_historical_data(bond='U.S. 2Y', from_date=yesterday.strftime('%d/%m/%Y'), to_date=today.strftime('%d/%m/%Y'))
-                    if not data.empty and len(data) > 1:
-                        current_value = data['Close'].iloc[-1]
-                        previous_value = data['Close'].iloc[-2]
-                        change = current_value - previous_value
-                        change_bp = change * 100
-                        change_percent = (change / previous_value) * 100 if previous_value != 0 else 0
-                        market_data[name] = {
-                            "current": f"{current_value:.3f}",
-                            "change": f"{change:.3f}",
-                            "change_bp": f"{change_bp:.2f}",
-                            "change_percent": f"{change_percent:.2f}%"
-                        }
-                        print(f"  ✅ {name} data fetched: Current={current_value:.3f}")
-                    else:
-                        market_data[name] = {"current": "N/A", "change": "N/A", "change_bp": "N/A", "change_percent": "N/A"}
-                        print(f"  ❌ {name} data empty or insufficient.")
-                    continue
+                    # investpyでUST債券データを取得
+                    try:
+                        data = investpy.get_bond_historical_data(
+                            bond='U.S. 2Y', 
+                            from_date=yesterday.strftime('%d/%m/%Y'), 
+                            to_date=today.strftime('%d/%m/%Y')
+                        )
+                        if not data.empty and len(data) >= 1:
+                            current_value = data['Close'].iloc[-1]
+                            if len(data) > 1:
+                                previous_value = data['Close'].iloc[-2]
+                            else:
+                                # 1日分のデータしかない場合、週末分を考慮して過去データを取得
+                                extended_data = investpy.get_bond_historical_data(
+                                    bond='U.S. 2Y', 
+                                    from_date=(yesterday - timedelta(days=7)).strftime('%d/%m/%Y'), 
+                                    to_date=today.strftime('%d/%m/%Y')
+                                )
+                                previous_value = extended_data['Close'].iloc[-2] if len(extended_data) > 1 else current_value
+                            
+                            change = current_value - previous_value
+                            change_percent = (change / previous_value) * 100 if previous_value != 0 else 0
+                            
+                            market_data[name] = {
+                                "current": f"{current_value:.2f}%",
+                                "change": f"{change:+.2f}",
+                                "change_percent": f"{change_percent:+.2f}%"
+                            }
+                            print(f"  ✅ {name} data fetched via investpy: Current={current_value:.2f}%")
+                            continue
+                        else:
+                            print(f"  ⚠️ {name}: No investpy data available, falling back to yfinance")
+                    except Exception as e:
+                        print(f"  ⚠️ {name}: investpy error ({str(e)}), falling back to yfinance")
                 
                 data = yf.download(ticker, start=yesterday - timedelta(days=5), end=today + timedelta(days=1), progress=False) # auto_adjust=Trueがデフォルト
                 

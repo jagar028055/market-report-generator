@@ -7,10 +7,13 @@ import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
 import plotly.graph_objects as go
 import plotly.io as pio
+from config import Config
+from typing import List, Dict, Optional
 
 class ChartGenerator:
-    def __init__(self, charts_dir="market_report_generator/charts"):
+    def __init__(self, charts_dir="market_report_generator/charts", config: Optional[Config] = None):
         self.charts_dir = charts_dir
+        self.config = config or Config()
         os.makedirs(self.charts_dir, exist_ok=True)
         self._setup_japanese_font()
 
@@ -49,6 +52,121 @@ class ChartGenerator:
         """設定されている日本語フォントのパスを返すヘルパー関数"""
         return self.japanese_font_path
 
+    def _calculate_moving_averages(self, data: pd.DataFrame, ma_keys: List[str] = None, ma_type: str = None) -> pd.DataFrame:
+        """
+        指定された移動平均を計算する
+        
+        Args:
+            data: OHLCV データ
+            ma_keys: 計算する移動平均のキー（config.MOVING_AVERAGESのキー）
+            ma_type: 移動平均のタイプ（SMA, EMA, WMA）
+        
+        Returns:
+            移動平均が追加されたDataFrame
+        """
+        if ma_keys is None:
+            ma_keys = self.config.DEFAULT_MA_DISPLAY
+        
+        if ma_type is None:
+            ma_type = self.config.DEFAULT_MA_TYPE
+        
+        data = data.copy()
+        
+        for ma_key in ma_keys:
+            if ma_key not in self.config.MOVING_AVERAGES:
+                print(f"Warning: Moving average key '{ma_key}' not found in config")
+                continue
+            
+            ma_config = self.config.MOVING_AVERAGES[ma_key]
+            period = ma_config["period"]
+            label = ma_config["label"]
+            
+            if ma_type == "SMA":
+                data[label] = data['Close'].rolling(window=period).mean()
+            elif ma_type == "EMA":
+                data[label] = data['Close'].ewm(span=period).mean()
+            elif ma_type == "WMA":
+                # 重み付き移動平均の計算
+                weights = pd.Series(range(1, period + 1))
+                data[label] = data['Close'].rolling(window=period).apply(
+                    lambda x: (x * weights).sum() / weights.sum(), raw=False
+                )
+            else:
+                print(f"Warning: Unsupported MA type '{ma_type}', defaulting to SMA")
+                data[label] = data['Close'].rolling(window=period).mean()
+        
+        return data
+
+    def _get_ma_traces_plotly(self, data: pd.DataFrame, ma_keys: List[str] = None) -> List[go.Scatter]:
+        """
+        Plotly用の移動平均トレースを生成する
+        
+        Args:
+            data: 移動平均が計算済みのDataFrame
+            ma_keys: 表示する移動平均のキー
+        
+        Returns:
+            Plotlyトレースのリスト
+        """
+        if ma_keys is None:
+            ma_keys = self.config.DEFAULT_MA_DISPLAY
+        
+        traces = []
+        for ma_key in ma_keys:
+            if ma_key not in self.config.MOVING_AVERAGES:
+                continue
+            
+            ma_config = self.config.MOVING_AVERAGES[ma_key]
+            label = ma_config["label"]
+            color = ma_config["color"]
+            
+            if label in data.columns:
+                trace = go.Scatter(
+                    x=data.index, 
+                    y=data[label], 
+                    mode='lines', 
+                    name=label, 
+                    line=dict(color=color, width=1.5)
+                )
+                traces.append(trace)
+        
+        return traces
+
+    def _get_ma_addplots_mplfinance(self, data: pd.DataFrame, ma_keys: List[str] = None) -> List:
+        """
+        mplfinance用の移動平均addplotを生成する
+        
+        Args:
+            data: 移動平均が計算済みのDataFrame
+            ma_keys: 表示する移動平均のキー
+        
+        Returns:
+            mplfinanceのaddplotリスト
+        """
+        if ma_keys is None:
+            ma_keys = self.config.DEFAULT_MA_DISPLAY
+        
+        addplots = []
+        for ma_key in ma_keys:
+            if ma_key not in self.config.MOVING_AVERAGES:
+                continue
+            
+            ma_config = self.config.MOVING_AVERAGES[ma_key]
+            label = ma_config["label"]
+            color = ma_config["color"]
+            
+            if label in data.columns:
+                addplot = mpf.make_addplot(
+                    data[label], 
+                    color=color, 
+                    panel=0, 
+                    width=0.75, 
+                    secondary_y=False
+                )
+                addplots.append(addplot)
+        
+        return addplots
+
     def generate_intraday_chart_interactive(self, data: pd.DataFrame, ticker_name: str, filename: str):
         """
         イントラデイチャートを Plotly でインタラクティブ表示用 HTML として保存する
@@ -81,27 +199,40 @@ class ChartGenerator:
         print(f"Interactive intraday chart saved to {filepath}")
         return filepath
 
-    def generate_longterm_chart_interactive(self, data: pd.DataFrame, ticker_name: str, filename: str):
+    def generate_longterm_chart_interactive(self, data: pd.DataFrame, ticker_name: str, filename: str, 
+                                           ma_keys: List[str] = None, ma_type: str = None):
         """
         1年ローソク足を Plotly でインタラクティブ表示用 HTML として保存する
+        
+        Args:
+            data: OHLCV データ
+            ticker_name: ティッカー名
+            filename: 保存するファイル名
+            ma_keys: 表示する移動平均のキー（config.MOVING_AVERAGESのキー）
+            ma_type: 移動平均のタイプ（SMA, EMA, WMA）
         """
         if data.empty:
             print(f"No data to generate interactive long-term chart for {ticker_name}.")
             return None
+        
         filepath = os.path.join(self.charts_dir, filename)
-        # 移動平均
-        data = data.copy()
-        data['MA25'] = data['Close'].rolling(window=25).mean()
-        data['MA75'] = data['Close'].rolling(window=75).mean()
-
-        fig = go.Figure(data=[go.Candlestick(x=data.index,
-                                             open=data['Open'],
-                                             high=data['High'],
-                                             low=data['Low'],
-                                             close=data['Close'],
+        
+        # 移動平均を計算
+        data_with_ma = self._calculate_moving_averages(data, ma_keys, ma_type)
+        
+        # ローソク足チャートを作成
+        fig = go.Figure(data=[go.Candlestick(x=data_with_ma.index,
+                                             open=data_with_ma['Open'],
+                                             high=data_with_ma['High'],
+                                             low=data_with_ma['Low'],
+                                             close=data_with_ma['Close'],
                                              name='Price')])
-        fig.add_trace(go.Scatter(x=data.index, y=data['MA25'], mode='lines', name='MA25', line=dict(color='blue')))
-        fig.add_trace(go.Scatter(x=data.index, y=data['MA75'], mode='lines', name='MA75', line=dict(color='red')))
+        
+        # 移動平均線を追加
+        ma_traces = self._get_ma_traces_plotly(data_with_ma, ma_keys)
+        for trace in ma_traces:
+            fig.add_trace(trace)
+        
         # 白黒ベースの配色に変更
         fig.update_traces(
             increasing_line_color='black',
@@ -110,13 +241,31 @@ class ChartGenerator:
             decreasing_fillcolor='black',
             selector=dict(type='candlestick')
         )
-        # レンジスライダーを非表示に
-        fig.update_layout(title=f"{ticker_name} Long-Term Chart (1 Year)",
+        
+        # 移動平均の情報をタイトルに追加
+        ma_info = ""
+        if ma_keys:
+            used_keys = ma_keys or self.config.DEFAULT_MA_DISPLAY
+            ma_labels = [self.config.MOVING_AVERAGES[key]["label"] for key in used_keys if key in self.config.MOVING_AVERAGES]
+            if ma_labels:
+                ma_type_display = ma_type or self.config.DEFAULT_MA_TYPE
+                ma_info = f" ({ma_type_display}: {', '.join(ma_labels)})"
+        
+        # レイアウトを設定
+        fig.update_layout(title=f"{ticker_name} Long-Term Chart (1 Year){ma_info}",
                           xaxis_rangeslider_visible=False,
                           xaxis_title='Date',
                           yaxis_title='Price',
                           template='simple_white',
-                          height=600)
+                          height=600,
+                          legend=dict(
+                              orientation="h",
+                              yanchor="bottom",
+                              y=1.02,
+                              xanchor="right",
+                              x=1
+                          ))
+        
         pio.write_html(fig, file=filepath, include_plotlyjs='cdn', full_html=True)
         print(f"Interactive long-term chart saved to {filepath}")
         return filepath
@@ -164,10 +313,18 @@ class ChartGenerator:
         print(f"Intraday chart saved to {filepath}")
         return filepath
 
-    def generate_longterm_chart(self, data: pd.DataFrame, ticker_name: str, filename: str):
+    def generate_longterm_chart(self, data: pd.DataFrame, ticker_name: str, filename: str,
+                               ma_keys: List[str] = None, ma_type: str = None):
         """
         長期チャート（1年程度）を生成し、画像として保存する。
-        移動平均線（例: 25日、75日）も表示する。
+        カスタマイズ可能な移動平均線を表示する。
+        
+        Args:
+            data: OHLCV データ
+            ticker_name: ティッカー名
+            filename: 保存するファイル名
+            ma_keys: 表示する移動平均のキー（config.MOVING_AVERAGESのキー）
+            ma_type: 移動平均のタイプ（SMA, EMA, WMA）
         """
         if data.empty:
             print(f"No data to generate long-term chart for {ticker_name}.")
@@ -175,8 +332,8 @@ class ChartGenerator:
 
         filepath = os.path.join(self.charts_dir, filename)
         
-        data['MA25'] = data['Close'].rolling(window=25).mean()
-        data['MA75'] = data['Close'].rolling(window=75).mean()
+        # 移動平均を計算
+        data_with_ma = self._calculate_moving_averages(data, ma_keys, ma_type)
 
         # 白黒ローソク足のスタイルを定義
         mc = mpf.make_marketcolors(up='white', down='black', edge='black', wick='black', ohlc='black')
@@ -185,15 +342,22 @@ class ChartGenerator:
             'font.family': plt.rcParams['font.family'] # 設定した日本語フォントを使用
         })
         
-        apds = [
-            mpf.make_addplot(data['MA25'], color='blue', panel=0, width=0.75, secondary_y=False, ylabel='Price'),
-            mpf.make_addplot(data['MA75'], color='red', panel=0, width=0.75, secondary_y=False, ylabel='Price')
-        ]
+        # 移動平均のaddplotを取得
+        apds = self._get_ma_addplots_mplfinance(data_with_ma, ma_keys)
+        
+        # 移動平均の情報をタイトルに追加
+        ma_info = ""
+        if ma_keys or self.config.DEFAULT_MA_DISPLAY:
+            used_keys = ma_keys or self.config.DEFAULT_MA_DISPLAY
+            ma_labels = [self.config.MOVING_AVERAGES[key]["label"] for key in used_keys if key in self.config.MOVING_AVERAGES]
+            if ma_labels:
+                ma_type_display = ma_type or self.config.DEFAULT_MA_TYPE
+                ma_info = f" ({ma_type_display}: {', '.join(ma_labels)})"
 
-        fig, axlist = mpf.plot(data,
+        fig, axlist = mpf.plot(data_with_ma,
                                type='candle',
                                style=s,
-                               title=f"{ticker_name} Long-Term Chart (1 Year)",
+                               title=f"{ticker_name} Long-Term Chart (1 Year){ma_info}",
                                ylabel='Price',
                                addplot=apds,
                                returnfig=True,

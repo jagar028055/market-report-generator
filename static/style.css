@@ -51,6 +51,658 @@ h3 {
     margin-bottom: 10px;
 }
 
+/* Modern Market Cards Styling */
+.market-cards-container {
+    padding: 0;
+}
+
+.market-category {
+    margin-bottom: 30px;
+}
+
+.market-category h3 {
+    font-size: 1.2em;
+    margin-bottom: 15px;
+    padding: 10px 0;
+    border-bottom: 1px solid #e1e8ed;
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+.market-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+/* Market cards base styling - enhanced version below */
+
+.market-card.unavailable {
+    background: #f8f9fa;
+    opacity: 0.7;
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.indicator-name {
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 1.0em;
+}
+
+.indicator-symbol {
+    font-size: 0.8em;
+    color: #7f8c8d;
+    background: #ecf0f1;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+}
+
+/* Card value styling - enhanced version below */
+
+.card-change {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9em;
+    font-weight: 500;
+}
+
+.card-change.positive {
+    color: #27ae60;
+}
+
+.card-change.negative {
+    color: #e74c3c;
+}
+
+.change-value {
+    font-weight: 600;
+}
+
+.change-percent {
+    opacity: 0.8;
+}
+
+/* Enhanced Trend Arrows and Animations */
+.trend-arrow {
+    font-size: 1.2em;
+    margin-right: 4px;
+    display: inline-block;
+    animation: pulse 2s infinite;
+}
+
+.trend-up {
+    color: #27ae60;
+}
+
+.trend-down {
+    color: #e74c3c;
+}
+
+.trend-neutral {
+    color: #95a5a6;
+}
+
+.trend-arrow.trend-up::before {
+    content: "↗️";
+}
+
+.trend-arrow.trend-down::before {
+    content: "↘️";
+}
+
+.trend-arrow.trend-neutral::before {
+    content: "➡️";
+}
+
+/* Smooth animations */
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translate3d(0, 30px, 0);
+    }
+    to {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+@keyframes countUp {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Enhanced Card Animations */
+.market-card {
+    background: #ffffff;
+    border: 1px solid #e1e8ed;
+    border-radius: 12px;
+    padding: 20px;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    position: relative;
+    overflow: hidden;
+    animation: slideInUp 0.6s ease-out;
+}
+
+.market-card:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+    border-color: #3498db;
+}
+
+/* Enhanced Value Display */
+.card-value {
+    font-size: 2.2em;
+    font-weight: 800;
+    color: #2c3e50;
+    margin-bottom: 10px;
+    line-height: 1.2;
+    animation: countUp 0.8s ease-out;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Gradient backgrounds for trend indication */
+.market-card.positive {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fff9 100%);
+    border-left: 5px solid #27ae60;
+}
+
+.market-card.negative {
+    background: linear-gradient(135deg, #ffffff 0%, #fff8f8 100%);
+    border-left: 5px solid #e74c3c;
+}
+
+.market-card.neutral {
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    border-left: 5px solid #95a5a6;
+}
+
+/* Data Freshness and Update Time Indicators */
+.update-info {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding: 12px 20px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 8px;
+    border-left: 4px solid #007bff;
+}
+
+.last-updated {
+    font-size: 0.9em;
+    color: #495057;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.update-time {
+    font-weight: 600;
+    color: #007bff;
+}
+
+.freshness-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8em;
+    font-weight: 500;
+    padding: 4px 8px;
+    border-radius: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.freshness-fresh {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.freshness-stale {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+}
+
+.freshness-old {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f1b0b7;
+}
+
+.pulse-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #28a745;
+    animation: pulse 2s infinite;
+}
+
+.pulse-dot.stale {
+    background: #ffc107;
+}
+
+.pulse-dot.old {
+    background: #dc3545;
+}
+
+/* Phase 3: Japanese Localization Features */
+.currency-toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: auto;
+    background: #f8f9fa;
+    border-radius: 20px;
+    padding: 5px;
+    border: 1px solid #dee2e6;
+}
+
+.currency-option {
+    padding: 8px 16px;
+    border-radius: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.85em;
+    font-weight: 500;
+    color: #6c757d;
+}
+
+.currency-option.active {
+    background: #007bff;
+    color: white;
+    box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
+}
+
+.currency-option:hover:not(.active) {
+    background: #e9ecef;
+    color: #495057;
+}
+
+.yen-converted {
+    font-size: 0.8em;
+    color: #6c757d;
+    margin-top: 2px;
+    font-style: italic;
+}
+
+/* Phase 2: Interactive Features - Hover Details */
+.market-card-wrapper {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+}
+
+.hover-details {
+    position: absolute;
+    top: 0;
+    left: 105%;
+    width: 300px;
+    background: #ffffff;
+    border: 1px solid #e1e8ed;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateX(-10px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1000;
+    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.95);
+}
+
+.market-card:hover .hover-details {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(0);
+}
+
+.hover-details h4 {
+    margin: 0 0 15px 0;
+    color: #2c3e50;
+    font-size: 1.1em;
+    font-weight: 700;
+    border-bottom: 1px solid #e9ecef;
+    padding-bottom: 8px;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    padding: 5px 0;
+}
+
+.detail-label {
+    font-size: 0.85em;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.detail-value {
+    font-size: 0.9em;
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+.detail-value.positive {
+    color: #27ae60;
+}
+
+.detail-value.negative {
+    color: #e74c3c;
+}
+
+.detail-chart {
+    margin-top: 15px;
+    height: 60px;
+    background: linear-gradient(90deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 6px;
+    position: relative;
+    overflow: hidden;
+}
+
+.detail-chart::before {
+    content: 'Mini Chart';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #adb5bd;
+    font-size: 0.75em;
+}
+
+/* Responsive hover positioning */
+@media (max-width: 768px) {
+    .hover-details {
+        left: -150px;
+        width: 280px;
+    }
+}
+
+/* Modal Detailed View */
+.market-modal {
+    display: none;
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(5px);
+    animation: fadeIn 0.3s ease-out;
+}
+
+.market-modal.show {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 30px;
+    width: 90%;
+    max-width: 800px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: slideInScale 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 15px;
+}
+
+.modal-title {
+    font-size: 1.8em;
+    font-weight: 700;
+    color: #2c3e50;
+    margin: 0;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #6c757d;
+    transition: color 0.2s ease;
+    padding: 5px;
+    border-radius: 50%;
+    width: 35px;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-close:hover {
+    color: #dc3545;
+    background: #f8f9fa;
+}
+
+.modal-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+}
+
+.modal-section {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.modal-section h3 {
+    margin: 0 0 15px 0;
+    color: #495057;
+    font-size: 1.2em;
+    font-weight: 600;
+}
+
+.modal-chart {
+    height: 300px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.1em;
+    font-weight: 500;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.9) translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* Chart tabs in modal */
+.chart-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.chart-tab-btn {
+    padding: 8px 16px;
+    border: 1px solid #dee2e6;
+    background: #f8f9fa;
+    color: #495057;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9em;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.chart-tab-btn.active {
+    background: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+.chart-tab-btn:hover:not(.active) {
+    background: #e9ecef;
+    border-color: #adb5bd;
+}
+
+.chart-loading {
+    text-align: center;
+    padding: 40px;
+    color: #6c757d;
+    font-style: italic;
+}
+
+/* Responsive modal */
+@media (max-width: 768px) {
+    .modal-content {
+        width: 95%;
+        padding: 20px;
+        margin: 10px;
+    }
+    
+    .modal-body {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .modal-title {
+        font-size: 1.4em;
+    }
+}
+
+/* Tooltip System */
+.tooltip {
+    position: relative;
+    display: inline-block;
+}
+
+.tooltip .tooltiptext {
+    visibility: hidden;
+    width: 220px;
+    background-color: rgba(44, 62, 80, 0.95);
+    color: #fff;
+    text-align: center;
+    border-radius: 8px;
+    padding: 10px;
+    position: absolute;
+    z-index: 1500;
+    bottom: 125%;
+    left: 50%;
+    margin-left: -110px;
+    opacity: 0;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    transform: translateY(10px);
+    font-size: 0.85em;
+    line-height: 1.4;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(10px);
+}
+
+.tooltip .tooltiptext::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: rgba(44, 62, 80, 0.95) transparent transparent transparent;
+}
+
+.tooltip:hover .tooltiptext {
+    visibility: visible;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Responsive tooltips */
+@media (max-width: 768px) {
+    .tooltip .tooltiptext {
+        width: 200px;
+        margin-left: -100px;
+        font-size: 0.8em;
+    }
+}
+
+/* Old trend indicators replaced by enhanced version above */
+
+/* Responsive design for cards */
+@media (max-width: 768px) {
+    .market-cards {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    
+    .market-card {
+        padding: 15px;
+    }
+    
+    .card-value {
+        font-size: 1.5em;
+    }
+    
+    .market-category h3 {
+        font-size: 1.1em;
+    }
+}
+
+@media (max-width: 480px) {
+    .market-cards {
+        gap: 10px;
+    }
+    
+    .card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+    
+    .indicator-symbol {
+        font-size: 0.75em;
+    }
+}
+
 table {
     width: 100%;
     border-collapse: collapse;
@@ -244,3 +896,411 @@ table th.sortable { cursor: pointer; }
 .sort-arrow { margin-left: 4px; font-size: 0.75em; }
 th.asc .sort-arrow::after { content: '▲'; }
 th.desc .sort-arrow::after { content: '▼'; }
+
+/* Chart Customization Controls */
+.chart-controls {
+    margin-bottom: 25px;
+    padding: 20px;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+}
+
+.chart-controls h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #0056b3;
+    border-bottom: 1px solid #dee2e6;
+    padding-bottom: 8px;
+}
+
+.chart-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+.option-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.option-group label {
+    font-weight: bold;
+    color: #333;
+    font-size: 0.9em;
+}
+
+.chart-options select {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.9em;
+    background-color: white;
+    min-width: 180px;
+}
+
+.ma-checkboxes {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: normal !important;
+    cursor: pointer;
+    padding: 4px 0;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+.checkbox-label span {
+    font-size: 0.9em;
+    color: #555;
+}
+
+.chart-options button {
+    padding: 10px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9em;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+    margin-right: 8px;
+}
+
+#updateCharts {
+    background-color: #0056b3;
+    color: white;
+}
+
+#updateCharts:hover {
+    background-color: #004494;
+}
+
+#resetCharts {
+    background-color: #6c757d;
+    color: white;
+}
+
+#resetCharts:hover {
+    background-color: #545b62;
+}
+
+.chart-options button:disabled {
+    background-color: #e9ecef;
+    color: #6c757d;
+    cursor: not-allowed;
+}
+
+/* News Filter Controls */
+.filter-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    align-items: end;
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.filter-group label {
+    font-weight: bold;
+    color: #333;
+    font-size: 0.9em;
+}
+
+.filter-controls select,
+.filter-controls input[type="text"] {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.9em;
+    background-color: white;
+    min-width: 150px;
+}
+
+.filter-controls input[type="text"] {
+    min-width: 200px;
+}
+
+.filter-controls button {
+    padding: 8px 15px;
+    background-color: #0056b3;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: background-color 0.3s ease;
+}
+
+.filter-controls button:hover {
+    background-color: #004494;
+}
+
+.news-count {
+    margin-top: 10px;
+    padding: 8px 12px;
+    background-color: #e9ecef;
+    border-radius: 4px;
+    font-size: 0.9em;
+    color: #555;
+    text-align: right;
+}
+
+/* Responsive Design */
+@media screen and (max-width: 768px) {
+    .container {
+        width: 95%;
+        padding: 15px;
+        margin: 10px auto;
+    }
+    
+    header h1 {
+        font-size: 1.5em;
+        margin-bottom: 10px;
+    }
+    
+    .report-date {
+        font-size: 0.8em;
+    }
+    
+    h2 {
+        font-size: 1.3em;
+        margin-bottom: 12px;
+    }
+    
+    h3 {
+        font-size: 1.1em;
+        margin-top: 15px;
+        margin-bottom: 8px;
+    }
+    
+    /* Improved table responsiveness */
+    .table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        margin-bottom: 20px;
+    }
+    
+    table {
+        min-width: 500px;
+        margin-bottom: 0;
+        font-size: 0.9em;
+    }
+    
+    table th, table td {
+        padding: 6px;
+        white-space: nowrap;
+    }
+    
+    /* Mobile-friendly tab buttons */
+    .tab-button {
+        padding: 10px 8px;
+        font-size: 0.9em;
+        min-height: 44px; /* Touch-friendly minimum size */
+    }
+    
+    /* Stack chart grid on mobile */
+    .chart-grid {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .chart-item {
+        flex: 1 1 100%;
+        padding: 10px;
+    }
+    
+    /* News section improvements */
+    .news li {
+        margin-bottom: 12px;
+        padding-left: 12px;
+        line-height: 1.5;
+    }
+    
+    /* Commentary section */
+    .commentary-content {
+        padding: 12px;
+        font-size: 0.95em;
+    }
+    
+    /* Filter controls */
+    .filter-controls {
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 15px;
+        padding: 12px;
+    }
+    
+    .filter-group {
+        width: 100%;
+    }
+    
+    .filter-controls select,
+    .filter-controls input[type="text"] {
+        min-height: 44px;
+        font-size: 16px; /* Prevents zoom on iOS */
+        padding: 10px 12px;
+        min-width: 100%;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    
+    .filter-controls button {
+        min-height: 44px;
+        width: 100%;
+        padding: 12px 15px;
+    }
+    
+    .news-count {
+        text-align: center;
+        font-size: 0.8em;
+    }
+    
+    /* Chart controls on mobile */
+    .chart-controls {
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .chart-options {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .option-group {
+        width: 100%;
+    }
+    
+    .chart-options select {
+        min-width: 100%;
+        width: 100%;
+        min-height: 44px;
+        font-size: 16px;
+        padding: 10px 12px;
+    }
+    
+    .ma-checkboxes {
+        gap: 12px;
+    }
+    
+    .checkbox-label {
+        padding: 8px 0;
+        min-height: 32px;
+    }
+    
+    .checkbox-label input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+    }
+    
+    .chart-options button {
+        width: 100%;
+        min-height: 44px;
+        padding: 12px 16px;
+        margin-bottom: 8px;
+        margin-right: 0;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .container {
+        width: 98%;
+        padding: 10px;
+        margin: 5px auto;
+    }
+    
+    header h1 {
+        font-size: 1.3em;
+    }
+    
+    .tab-button {
+        padding: 8px 4px;
+        font-size: 0.8em;
+    }
+    
+    table {
+        font-size: 0.8em;
+    }
+    
+    table th, table td {
+        padding: 4px;
+    }
+    
+    .chart-image-container {
+        max-width: 100%;
+    }
+    
+    section {
+        margin-bottom: 20px;
+    }
+}
+
+/* Touch-friendly improvements */
+@media (hover: none) and (pointer: coarse) {
+    .tab-button {
+        min-height: 48px;
+    }
+    
+    table th.sortable {
+        min-height: 48px;
+        padding: 12px 8px;
+    }
+    
+    .news a {
+        display: inline-block;
+        padding: 8px 4px;
+        margin: -8px -4px;
+    }
+}
+
+/* Print styles */
+@media print {
+    body {
+        background-color: white;
+    }
+    
+    .container {
+        width: 100%;
+        max-width: none;
+        margin: 0;
+        padding: 0;
+        box-shadow: none;
+        border-radius: 0;
+    }
+    
+    .tab-buttons {
+        display: none;
+    }
+    
+    .tab-content {
+        display: block !important;
+        page-break-inside: avoid;
+    }
+    
+    .chart-item {
+        page-break-inside: avoid;
+    }
+}
