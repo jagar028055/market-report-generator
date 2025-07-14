@@ -16,6 +16,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service as ChromeService
 from webdriver_manager.chrome import ChromeDriverManager
+from google_docs_client import GoogleDocsClient
 
 class DataFetcher:
     def __init__(self):
@@ -48,6 +49,9 @@ class DataFetcher:
             "XLRE": "Real Estate Select Sector SPDR Fund",
             "XLC": "Communication Services Select Sector SPDR Fund"
         }
+        
+        # Google Docs クライアントを初期化
+        self.google_docs_client = GoogleDocsClient(credentials_path='service_account.json')
         
         # 米経済指標名の英→日本語変換マップ
         self.indicator_translations = {
@@ -489,6 +493,32 @@ class DataFetcher:
         print(f"--- ロイター記事取得完了: {len(articles_data)} 件 ---")
         return articles_data
 
+    def get_google_docs_news(self, document_id: str, hours_limit: int = 24) -> list:
+        """
+        Googleドキュメントからニュース記事を取得
+        
+        Args:
+            document_id: GoogleドキュメントのID
+            hours_limit: 何時間以内の記事を対象とするか
+            
+        Returns:
+            ニュース記事のリスト（DataFetcher互換形式）
+        """
+        print(f"\n--- Google Docsからニュース記事を取得 (document_id: {document_id}) ---")
+        try:
+            articles = self.google_docs_client.fetch_news_articles(document_id, hours_limit)
+            print(f"  ✅ Google Docsから {len(articles)} 件の記事を取得しました")
+            
+            # 記事の詳細をログ出力
+            for i, article in enumerate(articles, 1):
+                print(f"  {i}. {article['title'][:50]}... ({article['published_jst'].strftime('%H:%M')})")
+            
+            return articles
+            
+        except Exception as e:
+            print(f"  ❌ Google Docsからのニュース取得エラー: {e}")
+            return []
+
     def classify_country(self, text: str) -> str:
         """Gemini API を用いて記事の関連国を判定し 2〜3 文字のコードを返す。失敗時は 'OTHER'"""
         if not self.gemini_model:
@@ -718,6 +748,11 @@ if __name__ == "__main__":
     news = fetcher.scrape_reuters_news(query="米国市場", hours_limit=72, max_pages=5, items_per_page=20, target_categories=["ビジネス", "マーケット", "トップニュース", "ワールド", "テクノロジー", "アジア市場", "経済"], exclude_keywords=["スポーツ", "エンタメ", "五輪", "サッカー", "映画", "将棋", "囲碁", "芸能", "ライフ", "アングル："])
     for article in news:
         print(f"Title: {article['title']}\nLink: {article['link']}\n")
+    
+    print("\n--- Google Docs News ---")
+    gdocs_news = fetcher.get_google_docs_news(document_id="1-Fun3I_0iiv0vH1vut6fUYJ5tUC3Ls1KsE3xyQP9YxQ")
+    for article in gdocs_news:
+        print(f"Title: {article['title']}\nURL: {article['url']}\nTime: {article['published_jst']}\n")
 
     print("\n--- Historical Data (S&P500 1 year) ---")
     sp500_hist = fetcher.get_historical_data("^GSPC", period="1y")

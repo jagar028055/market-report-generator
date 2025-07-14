@@ -21,6 +21,11 @@ investpy==1.0.8
 # AI/ML for commentary generation
 google-generativeai==0.8.5
 
+# Google API client libraries
+google-api-python-client==2.117.0
+google-auth==2.27.0
+google-auth-oauthlib==1.2.0
+
 # Template rendering and markdown
 Jinja2==3.1.6
 Markdown==3.8.2
