@@ -21,6 +21,7 @@ class HTMLGenerator:
         template = self.env.get_template('report_template.html')
         
         report_date = datetime.now().strftime("%Y年%m月%d日")
+        generation_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S %Z")
 
         # CSSファイルのパスをHTMLファイルからの相対パスとして生成
         css_path = "static/style.css" # market_report.htmlと同じディレクトリからの相対パス
@@ -47,6 +48,7 @@ class HTMLGenerator:
 
         output_html = template.render(
             report_date=report_date,
+            generation_time=generation_time,
             market_data=market_data,
             economic_indicators=economic_indicators,
             sector_performance=sector_performance,
