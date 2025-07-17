@@ -1,0 +1,8 @@
+{
+  "maType": "EMA",
+  "selectedMAs": [
+    "short",
+    "medium"
+  ],
+  "timestamp": "2025-07-13T16:00:00Z"
+}

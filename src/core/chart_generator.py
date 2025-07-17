@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
 import plotly.graph_objects as go
 import plotly.io as pio
-from config import Config
+from src.utils.config import Config
 from typing import List, Dict, Optional
 
 class ChartGenerator:

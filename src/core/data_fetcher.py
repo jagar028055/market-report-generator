@@ -16,7 +16,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service as ChromeService
 from webdriver_manager.chrome import ChromeDriverManager
-from google_docs_client import GoogleDocsClient
+from src.clients.google_docs_client import GoogleDocsClient
 
 class DataFetcher:
     def __init__(self):

@@ -12,9 +12,9 @@ import time
 import logging
 from bs4 import BeautifulSoup
 
-from config import Config
-from utils import retry_api_call, retry_network_operation, safe_request, DataValidator
-from logger import get_metrics_logger, log_execution_time, log_api_call
+from src.utils.config import Config
+from src.utils.utils import retry_api_call, retry_network_operation, safe_request, DataValidator
+from src.utils.logger import get_metrics_logger, log_execution_time, log_api_call
 
 class BaseAPIClient(abc.ABC):
     """API クライアントの基底クラス"""

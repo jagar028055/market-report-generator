@@ -1,10 +1,10 @@
 import traceback
 
 # Import all original modules to ensure all code paths are tested
-from data_fetcher import DataFetcher
-from chart_generator import ChartGenerator
-from commentary_generator import CommentaryGenerator
-from html_generator import HTMLGenerator
+from src.core.data_fetcher import DataFetcher
+from src.core.chart_generator import ChartGenerator
+from src.core.commentary_generator import CommentaryGenerator
+from src.core.html_generator import HTMLGenerator
 import os
 from datetime import datetime
 from dotenv import load_dotenv
