@@ -392,6 +392,12 @@ class EconomicDataFetcher(BaseDataFetcher):
         
         return True
 
+    def cleanup(self):
+        """リソースをクリーンアップ"""
+        self.logger.info("Cleaning up EconomicDataFetcher resources.")
+        # 現時点ではクリーンアップするリソースはないが、将来のためにメソッドを定義
+        pass
+
 
 # ファクトリーに登録
 from .base_fetcher import DataFetcherFactory
