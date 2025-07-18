@@ -1,26 +1,65 @@
-from dataclasses import dataclass, field
-from pathlib import Path
-from typing import Dict, List, Optional, Union
-from datetime import timedelta
-import os
-import yaml
+"""
+設定管理（下位互換性のためのレガシーモジュール）
 
-@dataclass
-class Config:
-    def __post_init__(self):
-        """設定ファイルから値を読み込んで既定値を上書き"""
-        self._load_from_yaml()
+新しいコードでは src.config を使用してください。
+このモジュールは既存のコードとの互換性を保つために残されています。
+"""
+
+import warnings
+from pathlib import Path
+
+# 新しい設定システムをインポート
+from ..config import Config as NewConfig, get_app_config
+
+
+class Config(NewConfig):
+    """
+    下位互換性のためのレガシー設定クラス
+    
+    新しいコードでは src.config.get_app_config() を使用してください。
+    """
+    
+    def __init__(self):
+        warnings.warn(
+            "src.utils.config.Config is deprecated. Use src.config.get_app_config() instead.",
+            DeprecationWarning,
+            stacklevel=2
+        )
+        super().__init__()
     
     def _load_from_yaml(self):
-        """YAMLファイルから設定を読み込み"""
+        """YAMLファイルから設定を読み込み（レガシー互換）"""
         yaml_path = Path(__file__).parent / "settings.yaml"
         if yaml_path.exists():
             try:
+                import yaml
                 with open(yaml_path, 'r', encoding='utf-8') as f:
                     yaml_config = yaml.safe_load(f)
                 
-                # YAMLの設定で既定値を上書き
-                self._update_from_dict(yaml_config)
+                # 新しい設定システムで処理
+                app_config = get_app_config()
+                
+                # 各設定クラスに配布
+                if 'data_fetching' in yaml_config:
+                    app_config.data_fetch._update_from_dict(yaml_config)
+                if 'news' in yaml_config:
+                    app_config.news._update_from_dict(yaml_config)
+                if 'web_scraping' in yaml_config:
+                    app_config.web_scraping._update_from_dict(yaml_config)
+                if 'charts' in yaml_config:
+                    app_config.chart._update_from_dict(yaml_config)
+                if 'ai' in yaml_config:
+                    app_config.ai._update_from_dict(yaml_config)
+                if 'system' in yaml_config:
+                    app_config.system._update_from_dict(yaml_config)
+                if 'logging' in yaml_config:
+                    app_config.logging._update_from_dict(yaml_config)
+                if 'files' in yaml_config:
+                    app_config.file._update_from_dict(yaml_config)
+                
+                # 再度属性を設定
+                self._setup_legacy_attributes()
+                
                 print(f"Configuration loaded from {yaml_path}")
             except Exception as e:
                 print(f"Warning: Could not load YAML config: {e}")
@@ -29,154 +68,30 @@ class Config:
             print(f"No YAML config found at {yaml_path}, using defaults")
     
     def _update_from_dict(self, config_dict: dict):
-        """辞書から設定値を更新"""
-        # 環境設定
-        if 'environment' in config_dict:
-            self.ENVIRONMENT = config_dict['environment']
+        """辞書から設定値を更新（レガシー互換）"""
+        # 新しい設定システムに委譲
+        app_config = get_app_config()
         
-        # データ取得設定
+        # 各設定クラスに配布
         if 'data_fetching' in config_dict:
-            df = config_dict['data_fetching']
-            if 'intraday_interval' in df:
-                self.INTRADAY_INTERVAL = df['intraday_interval']
-            if 'intraday_period_days' in df:
-                self.INTRADAY_PERIOD_DAYS = df['intraday_period_days']
-            if 'chart_longterm_period' in df:
-                self.CHART_LONGTERM_PERIOD = df['chart_longterm_period']
-            if 'target_calendar_countries' in df:
-                self.TARGET_CALENDAR_COUNTRIES = df['target_calendar_countries']
-        
-        # Webスクレイピング設定
-        if 'web_scraping' in config_dict:
-            ws = config_dict['web_scraping']
-            if 'user_agent' in ws:
-                self.USER_AGENT_STRING = ws['user_agent']
-            if 'webdriver_implicit_wait' in ws:
-                self.WEBDRIVER_IMPLICIT_WAIT = ws['webdriver_implicit_wait']
-            if 'webdriver_page_load_timeout' in ws:
-                self.WEBDRIVER_PAGE_LOAD_TIMEOUT = ws['webdriver_page_load_timeout']
-            if 'scraping_delay_seconds' in ws:
-                self.SCRAPING_DELAY_SECONDS = ws['scraping_delay_seconds']
-            if 'page_delay_seconds' in ws:
-                self.PAGE_DELAY_SECONDS = ws['page_delay_seconds']
-            if 'http_request_timeout' in ws:
-                self.HTTP_REQUEST_TIMEOUT = ws['http_request_timeout']
-        
-        # Reuters設定
-        if 'reuters' in config_dict:
-            r = config_dict['reuters']
-            if 'base_url' in r:
-                self.REUTERS_BASE_URL = r['base_url']
-            if 'search_url' in r:
-                self.REUTERS_SEARCH_URL = r['search_url']
-            if 'search_query' in r:
-                self.REUTERS_SEARCH_QUERY = r['search_query']
-            if 'target_categories' in r:
-                self.REUTERS_TARGET_CATEGORIES = r['target_categories']
-            if 'exclude_keywords' in r:
-                self.REUTERS_EXCLUDE_KEYWORDS = r['exclude_keywords']
-            if 'max_pages' in r:
-                self.REUTERS_MAX_PAGES = r['max_pages']
-        
-        # AI設定
-        if 'ai' in config_dict:
-            ai = config_dict['ai']
-            if 'preferred_models' in ai:
-                self.GEMINI_PREFERRED_MODELS = ai['preferred_models']
-            if 'text_limit' in ai:
-                self.AI_TEXT_LIMIT = ai['text_limit']
-        
-        # ニュース設定
+            app_config.data_fetch._update_from_dict(config_dict)
         if 'news' in config_dict:
-            news = config_dict['news']
-            if 'hours_limit' in news:
-                self.NEWS_HOURS_LIMIT = news['hours_limit']
-            if 'max_pages' in news:
-                self.MAX_NEWS_PAGES = news['max_pages']
-        
-        # ファイル設定
-        if 'files' in config_dict:
-            files = config_dict['files']
-            if 'report_filename' in files:
-                self.REPORT_FILENAME = files['report_filename']
-            if 'default_report_filename' in files:
-                self.DEFAULT_REPORT_FILENAME = files['default_report_filename']
-            if 'css_path' in files:
-                self.CSS_PATH = files['css_path']
-        
-        # チャート設定
+            app_config.news._update_from_dict(config_dict)
+        if 'web_scraping' in config_dict:
+            app_config.web_scraping._update_from_dict(config_dict)
         if 'charts' in config_dict:
-            charts = config_dict['charts']
-            if 'width' in charts:
-                self.CHART_WIDTH = charts['width']
-            if 'height' in charts:
-                self.CHART_HEIGHT = charts['height']
-            if 'dpi' in charts:
-                self.CHART_DPI = charts['dpi']
-            if 'plotly_js_source' in charts:
-                self.PLOTLY_JS_SOURCE = charts['plotly_js_source']
-            if 'matplotlib_figure_size' in charts:
-                self.MATPLOTLIB_FIGURE_SIZE = tuple(charts['matplotlib_figure_size'])
-            if 'japanese_font_paths' in charts:
-                self.JAPANESE_FONT_PATHS = charts['japanese_font_paths']
-            if 'moving_averages' in charts:
-                self.MOVING_AVERAGES = charts['moving_averages']
-            if 'default_ma_display' in charts:
-                self.DEFAULT_MA_DISPLAY = charts['default_ma_display']
-            if 'default_ma_type' in charts:
-                self.DEFAULT_MA_TYPE = charts['default_ma_type']
-        
-        # Markdown設定
-        if 'markdown' in config_dict:
-            markdown = config_dict['markdown']
-            if 'extensions' in markdown:
-                self.MARKDOWN_EXTENSIONS = markdown['extensions']
-        
-        # パフォーマンス設定
-        if 'performance' in config_dict:
-            perf = config_dict['performance']
-            if 'max_workers' in perf:
-                self.MAX_WORKERS = perf['max_workers']
-            if 'timeout_seconds' in perf:
-                self.TIMEOUT_SECONDS = perf['timeout_seconds']
-            if 'retry_attempts' in perf:
-                self.RETRY_ATTEMPTS = perf['retry_attempts']
-            if 'retry_wait_min' in perf:
-                self.RETRY_WAIT_MIN = perf['retry_wait_min']
-            if 'retry_wait_max' in perf:
-                self.RETRY_WAIT_MAX = perf['retry_wait_max']
-        
-        # ログ設定
+            app_config.chart._update_from_dict(config_dict)
+        if 'ai' in config_dict:
+            app_config.ai._update_from_dict(config_dict)
+        if 'system' in config_dict:
+            app_config.system._update_from_dict(config_dict)
         if 'logging' in config_dict:
-            logging = config_dict['logging']
-            if 'level' in logging:
-                self.LOG_LEVEL = logging['level']
-            if 'file' in logging:
-                self.LOG_FILE = Path(__file__).parent / logging['file']
-            if 'backup_count' in logging:
-                self.LOG_BACKUP_COUNT = logging['backup_count']
-            if 'max_bytes' in logging:
-                self.LOG_MAX_BYTES = logging['max_bytes']
+            app_config.logging._update_from_dict(config_dict)
+        if 'files' in config_dict:
+            app_config.file._update_from_dict(config_dict)
         
-        # リソース制限
-        if 'resources' in config_dict:
-            res = config_dict['resources']
-            if 'max_memory_mb' in res:
-                self.MAX_MEMORY_MB = res['max_memory_mb']
-            if 'max_disk_space_mb' in res:
-                self.MAX_DISK_SPACE_MB = res['max_disk_space_mb']
-        
-        # マーケットティッカー
-        if 'market_tickers' in config_dict:
-            self.MARKET_TICKERS = config_dict['market_tickers']
-        
-        # セクターETF
-        if 'sector_etfs' in config_dict:
-            self.SECTOR_ETFS = config_dict['sector_etfs']
-        
-        # 資産分類
-        if 'asset_classes' in config_dict:
-            self.ASSET_CLASSES = config_dict['asset_classes']
+        # 再度属性を設定
+        self._setup_legacy_attributes()
     # 環境設定
     ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")  # development/production
     
