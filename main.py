@@ -107,7 +107,7 @@ async def async_main():
             print("\n[1/4] データ取得タスクを追加中...")
             reuters_config = {
                 "query": "米国市場 OR 金融 OR 経済 OR 株価 OR FRB OR FOMC OR 決算 OR 利上げ OR インフレ",
-                "target_categories": ["ビジネスcategory", "マーケットcategory", "トップニュースcategory", "ワールドcategory", "テクノロジーcategory", "アジア市場category","不明","ワールドcategory","経済category"],
+                "target_categories": ["ビジネスcategory", "マーケットcategory", "トップニュースcategory", "テクノロジーcategory", "アジア市場category", "不明", "ワールドcategory","経済category"],
                 "exclude_keywords": ["スポーツ", "エンタメ", "五輪", "サッカー", "映画", "将棋", "囲碁", "芸能", "ライフ", "アングル："],
                 "max_pages": 5,
                 "hours_limit": 24
