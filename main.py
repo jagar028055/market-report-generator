@@ -134,7 +134,7 @@ async def async_main():
             print("\n[3/4] チャート生成タスクを追加中...")
             chart_gen_task_id = await task_manager.add_task(
                 "generate_charts",
-                lambda: task_manager.chart_generator.generate_all_charts({}),
+                lambda: task_manager.chart_generator.generate_all_charts(task_manager.get_task_result(chart_data_task_id).result),
                 priority=TaskPriority.MEDIUM,
                 timeout=300.0,
                 dependencies=[chart_data_task_id]
