@@ -354,6 +354,12 @@ class MarketDataFetcher(BaseDataFetcher):
             self.logger.warning(f"Ticker validation failed for {ticker}: {e}")
             return False
 
+    def cleanup(self):
+        """リソースをクリーンアップ"""
+        self.logger.info("Cleaning up MarketDataFetcher resources.")
+        # 現時点ではクリーンアップするリソースはないが、将来のためにメソッドを定義
+        pass
+
 
 # ファクトリーに登録
 from .base_fetcher import DataFetcherFactory
