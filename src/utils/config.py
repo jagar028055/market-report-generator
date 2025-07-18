@@ -7,6 +7,10 @@
 
 import warnings
 from pathlib import Path
+import os
+from dataclasses import field, dataclass
+from typing import Dict, List, Optional
+from datetime import timedelta
 
 # 新しい設定システムをインポート
 from ..config import Config as NewConfig, get_app_config
