@@ -490,6 +490,14 @@ class NewsDataFetcher(BaseDataFetcher):
         """指定されたカテゴリの記事をフィルター"""
         return [article for article in articles if article.get('category') == category]
 
+    def cleanup(self):
+        """リソースをクリーンアップ"""
+        self.logger.info("Cleaning up NewsDataFetcher resources.")
+        if self.google_docs_client and hasattr(self.google_docs_client, 'cleanup'):
+            self.google_docs_client.cleanup()
+        # WebDriverのインスタンスがクラスレベルで保持されている場合は、ここでdriver.quit()を呼ぶ
+        pass
+
 
 # ファクトリーに登録
 from .base_fetcher import DataFetcherFactory
