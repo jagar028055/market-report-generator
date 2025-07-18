@@ -96,6 +96,8 @@ class Config(NewConfig):
         
         # 再度属性を設定
         self._setup_legacy_attributes()
+    
+    import os
     # 環境設定
     ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")  # development/production
     
