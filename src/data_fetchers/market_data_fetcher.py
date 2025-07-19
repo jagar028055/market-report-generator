@@ -256,7 +256,8 @@ class MarketDataFetcher(BaseDataFetcher):
             df_final = self._process_intraday_by_asset_class(df_processed, ticker, datetime_col)
             
             if df_final.empty:
-                raise MarketDataError(f"No data available for the target period for {ticker}")
+                self.logger.warning(f"No data available for the target period for {ticker}. Returning empty DataFrame.")
+                return pd.DataFrame() # 空のデータフレームを返す
             
             # 最終的な列の選択
             final_cols = ['日時', 'Open', 'High', 'Low', 'Close', 'Volume']
@@ -353,6 +354,12 @@ class MarketDataFetcher(BaseDataFetcher):
         except Exception as e:
             self.logger.warning(f"Ticker validation failed for {ticker}: {e}")
             return False
+
+    def cleanup(self):
+        """リソースをクリーンアップ"""
+        self.logger.info("Cleaning up MarketDataFetcher resources.")
+        # 現時点ではクリーンアップするリソースはないが、将来のためにメソッドを定義
+        pass
 
 
 # ファクトリーに登録

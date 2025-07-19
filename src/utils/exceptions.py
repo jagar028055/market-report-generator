@@ -162,3 +162,15 @@ class InvalidDataFormatError(ValidationError):
 class DependencyError(MarketReportException):
     """依存関係エラー"""
     pass
+
+
+class TaskManagerError(MarketReportException):
+    """タスクマネージャー関連のエラー"""
+    pass
+
+
+class TaskExecutionError(TaskManagerError):
+    """タスク実行中のエラー"""
+    def __init__(self, message: str, original_exception: Exception = None, **kwargs):
+        super().__init__(message, **kwargs)
+        self.original_exception = original_exception
