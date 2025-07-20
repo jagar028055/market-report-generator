@@ -529,7 +529,7 @@ h3 {
 }
 
 .modal-chart {
-    height: 300px;
+    height: 400px;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border-radius: 8px;
     display: flex;
@@ -538,6 +538,22 @@ h3 {
     color: white;
     font-size: 1.1em;
     font-weight: 500;
+}
+
+#modalChartContainer {
+    min-height: 400px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 10px;
+    border: 1px solid #dee2e6;
+}
+
+#modalChartFrame {
+    max-width: 100%;
+    max-height: 380px;
+    object-fit: contain;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
 @keyframes fadeIn {
@@ -559,26 +575,30 @@ h3 {
 /* Chart tabs in modal */
 .chart-tabs {
     display: flex;
-    gap: 10px;
-    margin-bottom: 15px;
+    gap: 5px;
+    margin-bottom: 10px;
+    justify-content: center;
 }
 
 .chart-tab-btn {
-    padding: 8px 16px;
+    padding: 6px 12px;
     border: 1px solid #dee2e6;
     background: #f8f9fa;
     color: #495057;
-    border-radius: 6px;
+    border-radius: 4px;
     cursor: pointer;
-    font-size: 0.9em;
+    font-size: 0.8em;
     font-weight: 500;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
+    min-width: 60px;
+    text-align: center;
 }
 
 .chart-tab-btn.active {
     background: #007bff;
     color: white;
     border-color: #007bff;
+    box-shadow: 0 2px 4px rgba(0,123,255,0.3);
 }
 
 .chart-tab-btn:hover:not(.active) {
@@ -588,9 +608,31 @@ h3 {
 
 .chart-loading {
     text-align: center;
-    padding: 40px;
+    padding: 60px 20px;
     color: #6c757d;
     font-style: italic;
+    font-size: 0.9em;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 300px;
+}
+
+.chart-loading::before {
+    content: "";
+    width: 30px;
+    height: 30px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #007bff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 15px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 /* Responsive modal */
@@ -604,6 +646,21 @@ h3 {
     .modal-body {
         grid-template-columns: 1fr;
         gap: 20px;
+    }
+    
+    #modalChartContainer {
+        min-height: 300px;
+        padding: 8px;
+    }
+    
+    #modalChartFrame {
+        max-height: 280px;
+    }
+    
+    .chart-tab-btn {
+        font-size: 0.75em;
+        padding: 5px 10px;
+        min-width: 55px;
     }
     
     .modal-title {
