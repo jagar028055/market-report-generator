@@ -46,7 +46,9 @@
                                  data-change="{{ data.change }}"
                                  data-change-percent="{{ data.change_percent }}"
                                  data-chart-intraday="charts/{{ name }}_intraday.html"
-                                 data-chart-longterm="charts/{{ name }}_longterm.html">
+                                 data-chart-longterm="charts/{{ name }}_longterm.html"
+                                 data-chart-intraday-img="{% if static_chart_paths and name in static_chart_paths and 'intraday' in static_chart_paths[name] %}{{ static_chart_paths[name]['intraday'] }}{% else %}charts/{{ name.replace(' ', '_') }}_intraday.png{% endif %}"
+                                 data-chart-longterm-img="{% if static_chart_paths and name in static_chart_paths and 'longterm' in static_chart_paths[name] %}{{ static_chart_paths[name]['longterm'] }}{% else %}charts/{{ name.replace(' ', '_') }}_longterm.png{% endif %}">
                                 <div class="card-header">
                                     <div class="indicator-name">{{ name }}</div>
                                     <div class="indicator-symbol">{{ name[:3] | upper }}</div>
@@ -116,7 +118,9 @@
                                  data-change="{{ data.change }}"
                                  data-change-percent="{{ data.change_percent }}"
                                  data-chart-intraday="charts/{{ name }}_intraday.html"
-                                 data-chart-longterm="charts/{{ name }}_longterm.html">
+                                 data-chart-longterm="charts/{{ name }}_longterm.html"
+                                 data-chart-intraday-img="{% if static_chart_paths and name in static_chart_paths and 'intraday' in static_chart_paths[name] %}{{ static_chart_paths[name]['intraday'] }}{% else %}charts/{{ name.replace(' ', '_') }}_intraday.png{% endif %}"
+                                 data-chart-longterm-img="{% if static_chart_paths and name in static_chart_paths and 'longterm' in static_chart_paths[name] %}{{ static_chart_paths[name]['longterm'] }}{% else %}charts/{{ name.replace(' ', '_') }}_longterm.png{% endif %}">
                                 <div class="card-header">
                                     <div class="indicator-name">{{ name }}</div>
                                     <div class="indicator-symbol">{{ name.replace('米国', '').replace('年金利', 'Y') }}</div>
@@ -185,7 +189,9 @@
                                  data-change="{{ data.change }}"
                                  data-change-percent="{{ data.change_percent }}"
                                  data-chart-intraday="charts/{{ name }}_intraday.html"
-                                 data-chart-longterm="charts/{{ name }}_longterm.html">
+                                 data-chart-longterm="charts/{{ name }}_longterm.html"
+                                 data-chart-intraday-img="{% if static_chart_paths and name in static_chart_paths and 'intraday' in static_chart_paths[name] %}{{ static_chart_paths[name]['intraday'] }}{% else %}charts/{{ name.replace(' ', '_') }}_intraday.png{% endif %}"
+                                 data-chart-longterm-img="{% if static_chart_paths and name in static_chart_paths and 'longterm' in static_chart_paths[name] %}{{ static_chart_paths[name]['longterm'] }}{% else %}charts/{{ name.replace(' ', '_') }}_longterm.png{% endif %}">
                                 <div class="card-header">
                                     <div class="indicator-name">{{ name }}</div>
                                     <div class="indicator-symbol">{{ name.replace('DXY', '').replace('ドル指数', 'DXY').replace('ドル円', 'USDJPY').replace('ユーロドル', 'EURUSD') }}</div>
@@ -316,7 +322,9 @@
                                  data-change="{{ data.change }}"
                                  data-change-percent="{{ data.change_percent }}"
                                  data-chart-intraday="charts/{{ name }}_intraday.html"
-                                 data-chart-longterm="charts/{{ name }}_longterm.html">
+                                 data-chart-longterm="charts/{{ name }}_longterm.html"
+                                 data-chart-intraday-img="{% if static_chart_paths and name in static_chart_paths and 'intraday' in static_chart_paths[name] %}{{ static_chart_paths[name]['intraday'] }}{% else %}charts/{{ name.replace(' ', '_') }}_intraday.png{% endif %}"
+                                 data-chart-longterm-img="{% if static_chart_paths and name in static_chart_paths and 'longterm' in static_chart_paths[name] %}{{ static_chart_paths[name]['longterm'] }}{% else %}charts/{{ name.replace(' ', '_') }}_longterm.png{% endif %}">
                                 <div class="card-header">
                                     <div class="indicator-name">{{ name }} (恐怖指数)</div>
                                     <div class="indicator-symbol">VIX</div>
@@ -390,7 +398,7 @@
                                     <button class="chart-tab-btn" data-chart="longterm">長期</button>
                                 </div>
                                 <div id="modalChartContainer">
-                                    <iframe id="modalChartFrame" src="" width="100%" height="400" frameborder="0" style="display: none;"></iframe>
+                                    <img id="modalChartFrame" src="" alt="Chart" style="width: 100%; height: auto; display: none;">
                                     <div class="chart-loading">チャートを読み込み中...</div>
                                 </div>
                             </div>
@@ -656,6 +664,8 @@
                     const changePercent = this.dataset.changePercent;
                     const chartIntraday = this.dataset.chartIntraday;
                     const chartLongterm = this.dataset.chartLongterm;
+                    const chartIntradayImg = this.dataset.chartIntradayImg;
+                    const chartLongtermImg = this.dataset.chartLongtermImg;
                     
                     // Update modal content
                     modalTitle.textContent = `${indicator} 詳細情報`;
@@ -690,6 +700,8 @@
                     // Store chart URLs for tab switching
                     modalChartFrame.dataset.intradayChart = chartIntraday;
                     modalChartFrame.dataset.longtermChart = chartLongterm;
+                    modalChartFrame.dataset.intradayImg = chartIntradayImg;
+                    modalChartFrame.dataset.longtermImg = chartLongtermImg;
                     
                     // Setup chart tab functionality
                     chartTabs.forEach(tab => {
@@ -698,7 +710,9 @@
                             this.classList.add('active');
                             
                             const chartType = this.dataset.chart;
-                            const chartUrl = chartType === 'intraday' ? chartIntraday : chartLongterm;
+                            const chartUrl = chartType === 'intraday' ? 
+                                modalChartFrame.dataset.intradayImg : 
+                                modalChartFrame.dataset.longtermImg;
                             
                             if (chartUrl) {
                                 chartLoading.style.display = 'block';
@@ -713,11 +727,11 @@
                         });
                     });
                     
-                    // Load initial chart (intraday)
-                    if (chartIntraday) {
+                    // Load initial chart (intraday PNG)
+                    if (chartIntradayImg) {
                         chartLoading.style.display = 'block';
                         modalChartFrame.style.display = 'none';
-                        modalChartFrame.src = chartIntraday;
+                        modalChartFrame.src = chartIntradayImg;
                         
                         modalChartFrame.onload = function() {
                             chartLoading.style.display = 'none';

@@ -156,20 +156,24 @@ class CandlestickChartGenerator(BaseChartGenerator):
         data: pd.DataFrame, 
         ticker_name: str, 
         filename: str, 
+        chart_type: str = 'interactive',
         **kwargs
     ) -> Optional[str]:
         """イントラデイキャンドルスティックチャートを生成"""
         
         title = f"{ticker_name} Intraday Chart (Tokyo Time)"
         
-        # インタラクティブチャートとして生成
-        return self.generate_interactive_chart(data, title, filename, **kwargs)
+        if chart_type == 'static':
+            return self.generate_static_chart(data, title, filename, **kwargs)
+        else:
+            return self.generate_interactive_chart(data, title, filename, **kwargs)
     
     def generate_longterm_chart(
         self, 
         data: pd.DataFrame, 
         ticker_name: str, 
         filename: str, 
+        chart_type: str = 'interactive',
         ma_keys: List[str] = None, 
         ma_type: str = None,
         **kwargs
@@ -191,12 +195,18 @@ class CandlestickChartGenerator(BaseChartGenerator):
         
         title = f"{ticker_name} Long-Term Chart (1 Year){ma_info}"
         
-        # インタラクティブチャートとして生成
-        return self.generate_interactive_chart(
-            data, title, filename, 
-            ma_keys=ma_keys, ma_type=ma_type, 
-            **kwargs
-        )
+        if chart_type == 'static':
+            return self.generate_static_chart(
+                data, title, filename, 
+                ma_keys=ma_keys, ma_type=ma_type, 
+                **kwargs
+            )
+        else:
+            return self.generate_interactive_chart(
+                data, title, filename, 
+                ma_keys=ma_keys, ma_type=ma_type, 
+                **kwargs
+            )
     
     def _calculate_moving_averages(
         self, 

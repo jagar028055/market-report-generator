@@ -49,25 +49,39 @@ class AsyncChartGenerator:
         # 個別チャートタスク
         for ticker_name, data_set in chart_data.items():
             if isinstance(data_set, dict):
-                # イントラデイチャート
+                # イントラデイチャート（HTML版とPNG版の両方を生成）
                 if "intraday" in data_set and data_set["intraday"] is not None:
-                    task = self._generate_intraday_chart_async(
-                        ticker_name, data_set["intraday"]
+                    # HTMLチャート
+                    task_html = self._generate_intraday_chart_async(
+                        ticker_name, data_set["intraday"], 'interactive'
                     )
-                    tasks.append(task)
+                    tasks.append(task_html)
+                    
+                    # PNGチャート
+                    task_png = self._generate_intraday_chart_async(
+                        ticker_name, data_set["intraday"], 'static'
+                    )
+                    tasks.append(task_png)
                 
-                # 長期チャート
+                # 長期チャート（HTML版とPNG版の両方を生成）
                 if "longterm" in data_set and data_set["longterm"] is not None:
-                    task = self._generate_longterm_chart_async(
-                        ticker_name, data_set["longterm"]
+                    # HTMLチャート
+                    task_html = self._generate_longterm_chart_async(
+                        ticker_name, data_set["longterm"], 'interactive'
                     )
-                    tasks.append(task)
+                    tasks.append(task_html)
+                    
+                    # PNGチャート
+                    task_png = self._generate_longterm_chart_async(
+                        ticker_name, data_set["longterm"], 'static'
+                    )
+                    tasks.append(task_png)
         
         # タスクを並行実行
         results = await asyncio.gather(*tasks, return_exceptions=True)
         
         # 結果を整理
-        generated_charts = {"Intraday": [], "Long-Term": []}
+        generated_charts = {"Intraday": [], "Long-Term": [], "Static-PNG": {}}
         
         for result in results:
             if isinstance(result, Exception):
@@ -76,9 +90,21 @@ class AsyncChartGenerator:
             elif result:
                 chart_info = result
                 if chart_info.get('type') == 'intraday':
-                    generated_charts["Intraday"].append(chart_info)
+                    if chart_info.get('interactive'):
+                        generated_charts["Intraday"].append(chart_info)
+                    else:
+                        # PNGチャートの情報を保存
+                        if chart_info['name'] not in generated_charts["Static-PNG"]:
+                            generated_charts["Static-PNG"][chart_info['name']] = {}
+                        generated_charts["Static-PNG"][chart_info['name']]['intraday'] = chart_info['path']
                 elif chart_info.get('type') == 'longterm':
-                    generated_charts["Long-Term"].append(chart_info)
+                    if chart_info.get('interactive'):
+                        generated_charts["Long-Term"].append(chart_info)
+                    else:
+                        # PNGチャートの情報を保存
+                        if chart_info['name'] not in generated_charts["Static-PNG"]:
+                            generated_charts["Static-PNG"][chart_info['name']] = {}
+                        generated_charts["Static-PNG"][chart_info['name']]['longterm'] = chart_info['path']
         
         execution_time = time.time() - start_time
         self.logger.info(f"Async chart generation completed in {execution_time:.2f} seconds")
@@ -88,7 +114,8 @@ class AsyncChartGenerator:
     async def _generate_intraday_chart_async(
         self, 
         ticker_name: str, 
-        data: Any
+        data: Any,
+        chart_type: str = 'interactive'
     ) -> Optional[Dict[str, Any]]:
         """イントラデイチャートを非同期で生成"""
         
@@ -96,14 +123,17 @@ class AsyncChartGenerator:
             loop = asyncio.get_event_loop()
             
             with ThreadPoolExecutor(max_workers=1) as executor:
-                filename = f"{ticker_name.replace(' ', '_')}_intraday.html"
+                # チャートタイプに応じてファイル拡張子を決定
+                extension = '.png' if chart_type == 'static' else '.html'
+                filename = f"{ticker_name.replace(' ', '_')}_intraday{extension}"
                 
                 future = loop.run_in_executor(
                     executor,
                     self.candlestick_generator.generate_intraday_chart,
                     data,
                     ticker_name,
-                    filename
+                    filename,
+                    chart_type
                 )
                 
                 chart_path = await future
@@ -115,7 +145,7 @@ class AsyncChartGenerator:
                         "name": ticker_name,
                         "path": f"charts/{filename}",
                         "type": "intraday",
-                        "interactive": True
+                        "interactive": chart_type == 'interactive'
                     }
                 
                 return None
@@ -123,7 +153,8 @@ class AsyncChartGenerator:
     async def _generate_longterm_chart_async(
         self, 
         ticker_name: str, 
-        data: Any
+        data: Any,
+        chart_type: str = 'interactive'
     ) -> Optional[Dict[str, Any]]:
         """長期チャートを非同期で生成"""
         
@@ -131,14 +162,17 @@ class AsyncChartGenerator:
             loop = asyncio.get_event_loop()
             
             with ThreadPoolExecutor(max_workers=1) as executor:
-                filename = f"{ticker_name.replace(' ', '_')}_longterm.html"
+                # チャートタイプに応じてファイル拡張子を決定
+                extension = '.png' if chart_type == 'static' else '.html'
+                filename = f"{ticker_name.replace(' ', '_')}_longterm{extension}"
                 
                 future = loop.run_in_executor(
                     executor,
                     self.candlestick_generator.generate_longterm_chart,
                     data,
                     ticker_name,
-                    filename
+                    filename,
+                    chart_type
                 )
                 
                 chart_path = await future
@@ -150,7 +184,7 @@ class AsyncChartGenerator:
                         "name": ticker_name,
                         "path": f"charts/{filename}",
                         "type": "longterm",
-                        "interactive": True
+                        "interactive": chart_type == 'interactive'
                     }
                 
                 return None
@@ -242,7 +276,7 @@ class AsyncChartGenerator:
             if isinstance(data_set, dict) and "intraday" in data_set:
                 if data_set["intraday"] is not None:
                     task = self._generate_intraday_chart_async(
-                        ticker_name, data_set["intraday"]
+                        ticker_name, data_set["intraday"], 'interactive'
                     )
                     tasks.append(task)
         
@@ -268,7 +302,7 @@ class AsyncChartGenerator:
             if isinstance(data_set, dict) and "longterm" in data_set:
                 if data_set["longterm"] is not None:
                     task = self._generate_longterm_chart_async(
-                        ticker_name, data_set["longterm"]
+                        ticker_name, data_set["longterm"], 'interactive'
                     )
                     tasks.append(task)
         
