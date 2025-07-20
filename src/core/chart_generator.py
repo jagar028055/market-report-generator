@@ -8,6 +8,7 @@ import matplotlib.font_manager as fm
 import plotly.graph_objects as go
 import plotly.io as pio
 from src.utils.config import Config
+from src.chart_generators.candlestick_chart_generator import CandlestickChartGenerator
 from typing import List, Dict, Optional
 
 class ChartGenerator:
@@ -16,6 +17,9 @@ class ChartGenerator:
         self.config = config or Config()
         os.makedirs(self.charts_dir, exist_ok=True)
         self._setup_japanese_font()
+        
+        # CandlestickChartGeneratorを初期化
+        self.candlestick_generator = CandlestickChartGenerator(charts_dir)
 
     def _setup_japanese_font(self):
         """matplotlibで日本語を表示するためのフォント設定"""
@@ -420,9 +424,21 @@ class ChartGenerator:
         print(f"Interactive sector performance chart saved to {filepath}")
         return filepath
 
-def _get_japanese_font_path(self):
-    """設定されている日本語フォントのパスを返すヘルパー関数"""
-    return self.japanese_font_path
+    def generate_intraday_chart_static(self, data: pd.DataFrame, ticker_name: str, filename: str):
+        """イントラデイチャートの静的版（PNG）を生成"""
+        return self.candlestick_generator.generate_intraday_chart(
+            data, ticker_name, filename, chart_type='static'
+        )
+
+    def generate_longterm_chart_static(self, data: pd.DataFrame, ticker_name: str, filename: str):
+        """長期チャートの静的版（PNG）を生成"""
+        return self.candlestick_generator.generate_longterm_chart(
+            data, ticker_name, filename, chart_type='static'
+        )
+
+    def _get_japanese_font_path(self):
+        """設定されている日本語フォントのパスを返すヘルパー関数"""
+        return self.japanese_font_path
 
 if __name__ == "__main__":
     # テスト用のダミーデータ生成

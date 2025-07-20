@@ -13,7 +13,7 @@ class HTMLGenerator:
         # FileSystemLoaderには絶対パスを渡す
         self.env = Environment(loader=FileSystemLoader(self.template_dir))
 
-    def generate_report(self, market_data: dict, economic_indicators: dict, sector_performance: dict, news_articles: list, commentary: str, grouped_charts: dict, sector_chart_path: str = None):
+    def generate_report(self, market_data: dict, economic_indicators: dict, sector_performance: dict, news_articles: list, commentary: str, grouped_charts: dict, sector_chart_path: str = None, static_chart_paths: dict = None):
         """
         収集したデータをHTMLレポートとして生成する。
         """
@@ -56,7 +56,8 @@ class HTMLGenerator:
             commentary=commentary_html,
             grouped_charts=grouped_charts, # タイムスタンプ付きのチャートデータ構造を渡す
             sector_chart_path=sector_chart_path_with_buster, # タイムスタンプ付きのセクターチャートパスをテンプレートに渡す
-            css_path=css_path # CSSパスをテンプレートに渡す
+            css_path=css_path, # CSSパスをテンプレートに渡す
+            static_chart_paths=static_chart_paths or {} # 静的チャートパスを渡す
         )
 
         output_filepath = os.path.join(self.output_dir, self.report_filename)
