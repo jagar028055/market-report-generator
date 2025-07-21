@@ -13,6 +13,12 @@ index.html
 untranslated_indicators.txt
 service_account.json
 
+# Node.js
+node_modules/
+*.lock
+
+# Images
+*.png
+
 # Output files
 output/
-*.html

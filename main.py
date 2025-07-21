@@ -237,13 +237,17 @@ def enhanced_main():
         economic_indicators = economic_fetcher.get_economic_indicators()
         sector_performance = market_fetcher.get_sector_etf_performance()
         
-        reuters_config = {
-            "query": "米国市場 OR 金融 OR 経済 OR 株価 OR FRB OR FOMC OR 決算 OR 利上げ OR インフレ",
-            "target_categories": ["ビジネスcategory", "マーケットcategory", "トップニュースcategory", "ワールドcategory", "テクノロジーcategory", "アジア市場category","不明","ワールドcategory","経済category"],
-            "exclude_keywords": ["スポーツ", "エンタメ", "五輪", "サッカー", "映画", "将棋", "囲碁", "芸能", "ライフ", "アングル："],
-            "max_pages": 5
-        }
-        news_articles = news_fetcher.scrape_reuters_news(hours_limit=24, **reuters_config)
+        # ロイターからのスクレイピングは維持しつつ、Google Docsからの取得に切り替え
+        # reuters_config = {
+        #     "query": "米国市場 OR 金融 OR 経済 OR 株価 OR FRB OR FOMC OR 決算 OR 利上げ OR インフレ",
+        #     "target_categories": ["ビジネスcategory", "マーケットcategory", "トップニュースcategory", "ワールドcategory", "テクノロジーcategory", "アジア市場category","不明","ワールドcategory","経済category"],
+        #     "exclude_keywords": ["スポーツ", "エンタメ", "五輪", "サッカー", "映画", "将棋", "囲碁", "芸能", "ライフ", "アングル："],
+        #     "max_pages": 5
+        # }
+        # news_articles = news_fetcher.scrape_reuters_news(hours_limit=24, **reuters_config)
+        
+        google_doc_id = "1-Fun3I_0iiv0vH1vut6fUYJ5tUC3Ls1KsE3xyQP9YxQ"
+        news_articles = news_fetcher.get_google_docs_news(document_id=google_doc_id, hours_limit=24)
         
         # チャートデータ取得
         chart_data = {}

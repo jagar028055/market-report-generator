@@ -73,9 +73,34 @@ class CandlestickChartGenerator(BaseChartGenerator):
             # スタイルを適用
             self._apply_plotly_style(fig, title, **kwargs)
             
-            # ファイルに保存
+                        # ファイルに保存
             output_path = self.get_output_path(filename)
-            pio.write_html(fig, file=str(output_path), include_plotlyjs=self.config.PLOTLY_JS_SOURCE, full_html=True)
+            
+            # リサイズ用のJavaScriptを追加
+            js_resize = """<script>
+    function resizePlot() {
+        var chartDiv = document.getElementById('plotly-chart');
+        if (chartDiv) {
+            Plotly.Plots.resize(chartDiv);
+        }
+    }
+    window.addEventListener('message', function(event) {
+        if (event.data.type === 'resize-plotly') {
+            resizePlot();
+        }
+    }, false);
+    // 初期ロード時にもリサイズを試みる
+    window.addEventListener('load', resizePlot);
+</script>"""
+            
+            # HTMLを生成し、リサイズ用スクリプトを追記
+            html_str = pio.to_html(fig, include_plotlyjs=self.config.PLOTLY_JS_SOURCE, full_html=True, div_id='plotly-chart')
+            
+            # </body>の直前にスクリプトを挿入
+            html_str = html_str.replace("</body>", js_resize + "</body>")
+
+            with open(output_path, "w", encoding="utf-8") as f:
+                f.write(html_str)
             
             self._log_generation_result(output_path, "interactive candlestick", True)
             return str(output_path)
