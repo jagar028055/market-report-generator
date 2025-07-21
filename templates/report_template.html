@@ -45,6 +45,12 @@
                                  data-current="{{ data.current }}"
                                  data-change="{{ data.change }}"
                                  data-change-percent="{{ data.change_percent }}"
+                                 data-rsi="{{ data.rsi if data.rsi is defined else 'N/A' }}"
+                                 data-rsi-color="{{ data.rsi_color if data.rsi_color is defined else '#6c757d' }}"
+                                 data-ma-divergence="{{ data.ma_divergence if data.ma_divergence is defined else 'N/A' }}"
+                                 data-ma-divergence-color="{{ data.ma_divergence_color if data.ma_divergence_color is defined else '#6c757d' }}"
+                                 data-volume-analysis="{{ data.volume_analysis if data.volume_analysis is defined else 'N/A' }}"
+                                 data-volume-analysis-color="{{ data.volume_analysis_color if data.volume_analysis_color is defined else '#6c757d' }}"
                                  data-chart-intraday="charts/{{ name }}_intraday.html"
                                  data-chart-longterm="charts/{{ name }}_longterm.html"
                                  data-chart-intraday-img="{% if static_chart_paths and name in static_chart_paths and 'intraday' in static_chart_paths[name] %}{{ static_chart_paths[name]['intraday'] }}{% else %}charts/{{ name.replace(' ', '_') }}_intraday.png{% endif %}"
@@ -117,6 +123,12 @@
                                  data-current="{{ data.current }}"
                                  data-change="{{ data.change }}"
                                  data-change-percent="{{ data.change_percent }}"
+                                 data-rsi="{{ data.rsi if data.rsi is defined else 'N/A' }}"
+                                 data-rsi-color="{{ data.rsi_color if data.rsi_color is defined else '#6c757d' }}"
+                                 data-ma-divergence="{{ data.ma_divergence if data.ma_divergence is defined else 'N/A' }}"
+                                 data-ma-divergence-color="{{ data.ma_divergence_color if data.ma_divergence_color is defined else '#6c757d' }}"
+                                 data-volume-analysis="{{ data.volume_analysis if data.volume_analysis is defined else 'N/A' }}"
+                                 data-volume-analysis-color="{{ data.volume_analysis_color if data.volume_analysis_color is defined else '#6c757d' }}"
                                  data-chart-intraday="charts/{{ name }}_intraday.html"
                                  data-chart-longterm="charts/{{ name }}_longterm.html"
                                  data-chart-intraday-img="{% if static_chart_paths and name in static_chart_paths and 'intraday' in static_chart_paths[name] %}{{ static_chart_paths[name]['intraday'] }}{% else %}charts/{{ name.replace(' ', '_') }}_intraday.png{% endif %}"
@@ -188,6 +200,12 @@
                                  data-current="{{ data.current }}"
                                  data-change="{{ data.change }}"
                                  data-change-percent="{{ data.change_percent }}"
+                                 data-rsi="{{ data.rsi if data.rsi is defined else 'N/A' }}"
+                                 data-rsi-color="{{ data.rsi_color if data.rsi_color is defined else '#6c757d' }}"
+                                 data-ma-divergence="{{ data.ma_divergence if data.ma_divergence is defined else 'N/A' }}"
+                                 data-ma-divergence-color="{{ data.ma_divergence_color if data.ma_divergence_color is defined else '#6c757d' }}"
+                                 data-volume-analysis="{{ data.volume_analysis if data.volume_analysis is defined else 'N/A' }}"
+                                 data-volume-analysis-color="{{ data.volume_analysis_color if data.volume_analysis_color is defined else '#6c757d' }}"
                                  data-chart-intraday="charts/{{ name }}_intraday.html"
                                  data-chart-longterm="charts/{{ name }}_longterm.html"
                                  data-chart-intraday-img="{% if static_chart_paths and name in static_chart_paths and 'intraday' in static_chart_paths[name] %}{{ static_chart_paths[name]['intraday'] }}{% else %}charts/{{ name.replace(' ', '_') }}_intraday.png{% endif %}"
@@ -321,6 +339,12 @@
                                  data-current="{{ data.current }}"
                                  data-change="{{ data.change }}"
                                  data-change-percent="{{ data.change_percent }}"
+                                 data-rsi="{{ data.rsi if data.rsi is defined else 'N/A' }}"
+                                 data-rsi-color="{{ data.rsi_color if data.rsi_color is defined else '#6c757d' }}"
+                                 data-ma-divergence="{{ data.ma_divergence if data.ma_divergence is defined else 'N/A' }}"
+                                 data-ma-divergence-color="{{ data.ma_divergence_color if data.ma_divergence_color is defined else '#6c757d' }}"
+                                 data-volume-analysis="{{ data.volume_analysis if data.volume_analysis is defined else 'N/A' }}"
+                                 data-volume-analysis-color="{{ data.volume_analysis_color if data.volume_analysis_color is defined else '#6c757d' }}"
                                  data-chart-intraday="charts/{{ name }}_intraday.html"
                                  data-chart-longterm="charts/{{ name }}_longterm.html"
                                  data-chart-intraday-img="{% if static_chart_paths and name in static_chart_paths and 'intraday' in static_chart_paths[name] %}{{ static_chart_paths[name]['intraday'] }}{% else %}charts/{{ name.replace(' ', '_') }}_intraday.png{% endif %}"
@@ -666,28 +690,53 @@
                     const changePercent = this.dataset.changePercent;
                     const chartIntradayImg = this.dataset.chartIntradayImg;
                     
+                    // Get technical indicators
+                    const rsi = this.dataset.rsi;
+                    const rsiColor = this.dataset.rsiColor;
+                    const maDivergence = this.dataset.maDivergence;
+                    const maDivergenceColor = this.dataset.maDivergenceColor;
+                    const volumeAnalysis = this.dataset.volumeAnalysis;
+                    const volumeAnalysisColor = this.dataset.volumeAnalysisColor;
+                    
                     // Update modal content
                     modalTitle.textContent = `${indicator} 詳細情報`;
                     modalBasicInfo.innerHTML = `
-                        <div class="detail-row">
-                            <span class="detail-label">指標名:</span>
-                            <span class="detail-value">${indicator}</span>
+                        <h3>基本情報</h3>
+                        <div class="info-row">
+                            <span class="info-label">指標名:</span>
+                            <span class="info-value">${indicator}</span>
                         </div>
-                        <div class="detail-row">
-                            <span class="detail-label">現在値:</span>
-                            <span class="detail-value">${current}</span>
+                        <div class="info-row">
+                            <span class="info-label">現在値:</span>
+                            <span class="info-value">${current}</span>
                         </div>
-                        <div class="detail-row">
-                            <span class="detail-label">前日比:</span>
-                            <span class="detail-value ${change && change !== 'N/A' ? (parseFloat(change) > 0 ? 'positive' : parseFloat(change) < 0 ? 'negative' : '') : ''}">${change || 'N/A'}</span>
+                        <div class="info-row">
+                            <span class="info-label">前日比:</span>
+                            <span class="info-value ${change && change !== 'N/A' ? (parseFloat(change) > 0 ? 'positive' : parseFloat(change) < 0 ? 'negative' : '') : ''}">${change || 'N/A'}</span>
                         </div>
-                        <div class="detail-row">
-                            <span class="detail-label">変化率:</span>
-                            <span class="detail-value ${changePercent && changePercent !== 'N/A' ? (parseFloat(changePercent.replace('%', '')) > 0 ? 'positive' : parseFloat(changePercent.replace('%', '')) < 0 ? 'negative' : '') : ''}">${changePercent || 'N/A'}</span>
+                        <div class="info-row">
+                            <span class="info-label">変化率:</span>
+                            <span class="info-value ${changePercent && changePercent !== 'N/A' ? (parseFloat(changePercent.replace('%', '')) > 0 ? 'positive' : parseFloat(changePercent.replace('%', '')) < 0 ? 'negative' : '') : ''}">${changePercent || 'N/A'}</span>
                         </div>
-                        <div class="detail-row">
-                            <span class="detail-label">更新時間:</span>
-                            <span class="detail-value">${new Date().toLocaleString('ja-JP')}</span>
+                        <div class="info-row">
+                            <span class="info-label">更新時間:</span>
+                            <span class="info-value">${new Date().toLocaleString('ja-JP')}</span>
+                        </div>
+                        
+                        <div class="technical-indicators">
+                            <h3>テクニカル指標</h3>
+                            <div class="technical-row">
+                                <span class="technical-label">RSI (14日):</span>
+                                <span class="technical-value" style="color: ${rsiColor || '#6c757d'}">${rsi || 'N/A'}</span>
+                            </div>
+                            <div class="technical-row">
+                                <span class="technical-label">移動平均乖離率 (25日):</span>
+                                <span class="technical-value" style="color: ${maDivergenceColor || '#6c757d'}">${maDivergence || 'N/A'}</span>
+                            </div>
+                            <div class="technical-row">
+                                <span class="technical-label">出来高分析 (20日平均比):</span>
+                                <span class="technical-value" style="color: ${volumeAnalysisColor || '#6c757d'}">${volumeAnalysis || 'N/A'}</span>
+                            </div>
                         </div>
                     `;
                     

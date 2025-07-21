@@ -531,6 +531,51 @@ h3 {
     border-radius: 12px;
     padding: 15px;
 }
+.modal-section h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #333;
+    font-size: 1.1em;
+}
+.info-row {
+    display: flex;
+    justify-content: flex-start;
+    gap: 15px;
+    align-items: center;
+    margin-bottom: 8px;
+    font-size: 0.95em;
+}
+.info-label {
+    font-weight: 600;
+    color: #555;
+    min-width: 80px;
+}
+.info-value {
+    color: #333;
+    font-weight: 500;
+}
+.technical-indicators {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #ddd;
+}
+.technical-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    font-size: 0.9em;
+}
+.technical-label {
+    font-weight: 600;
+    color: #555;
+}
+.technical-value {
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: #f1f1f1;
+}
 
 .modal-section.chart-section {
     padding: 5px;
