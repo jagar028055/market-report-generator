@@ -12,3 +12,7 @@ index.html
 *.log
 untranslated_indicators.txt
 service_account.json
+
+# Output files
+output/
+*.html
