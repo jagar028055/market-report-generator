@@ -9,6 +9,18 @@ venv/
 archive/
 charts/
 index.html
+market_report.html
 *.log
 untranslated_indicators.txt
 service_account.json
+CHART_IMPROVEMENT_PLAN.md
+
+# Node.js
+node_modules/
+*.lock
+
+# Images
+*.png
+
+# Output files
+output/

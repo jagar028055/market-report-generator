@@ -111,7 +111,7 @@ class MarketDataFetcher(BaseDataFetcher):
         try:
             data = yf.download(
                 ticker,
-                start=yesterday - timedelta(days=5),
+                start=yesterday - timedelta(days=60),  # 技術指標計算のため60日分取得
                 end=today + timedelta(days=1),
                 progress=False
             )
@@ -126,13 +126,20 @@ class MarketDataFetcher(BaseDataFetcher):
                 change = current_value - previous_value
                 change_percent = (change / previous_value) * 100 if previous_value != 0 else 0
                 
+                # 技術指標計算
+                technical_indicators = self._calculate_technical_indicators(data)
+                
                 self.logger.debug(f"Stock data fetched for {name}: {current_value:.2f}")
                 
-                return {
+                result = {
                     "current": f"{current_value:.2f}",
                     "change": f"{change:.2f}",
                     "change_percent": f"{change_percent:.2f}%"
                 }
+                
+                # 技術指標を追加
+                result.update(technical_indicators)
+                return result
             else:
                 raise MarketDataError(f"Insufficient data for {name}")
                 
@@ -354,6 +361,99 @@ class MarketDataFetcher(BaseDataFetcher):
         except Exception as e:
             self.logger.warning(f"Ticker validation failed for {ticker}: {e}")
             return False
+
+    def _calculate_technical_indicators(self, data: pd.DataFrame) -> Dict[str, str]:
+        """技術指標を計算"""
+        indicators = {}
+        
+        try:
+            # RSI計算
+            rsi = self._calculate_rsi(data['Close'])
+            if not np.isnan(rsi):
+                rsi_color = "#dc3545" if rsi > 70 else "#28a745" if rsi < 30 else "#6c757d"
+                indicators["rsi"] = f"{rsi:.1f}"
+                indicators["rsi_color"] = rsi_color
+            else:
+                indicators["rsi"] = "N/A"
+                indicators["rsi_color"] = "#6c757d"
+            
+            # 移動平均乖離率計算（25日）
+            ma_divergence = self._calculate_ma_divergence(data['Close'], period=25)
+            if not np.isnan(ma_divergence):
+                ma_color = "#dc3545" if ma_divergence > 10 else "#28a745" if ma_divergence < -10 else "#6c757d"
+                indicators["ma_divergence"] = f"{ma_divergence:+.1f}%"
+                indicators["ma_divergence_color"] = ma_color
+            else:
+                indicators["ma_divergence"] = "N/A"
+                indicators["ma_divergence_color"] = "#6c757d"
+            
+            # 出来高分析（20日平均比較）
+            volume_analysis = self._calculate_volume_analysis(data['Volume'])
+            if not np.isnan(volume_analysis):
+                vol_color = "#dc3545" if volume_analysis > 150 else "#28a745" if volume_analysis > 100 else "#6c757d"
+                indicators["volume_analysis"] = f"{volume_analysis:.0f}%"
+                indicators["volume_analysis_color"] = vol_color
+            else:
+                indicators["volume_analysis"] = "N/A"
+                indicators["volume_analysis_color"] = "#6c757d"
+                
+        except Exception as e:
+            self.logger.warning(f"Error calculating technical indicators: {e}")
+            # フォールバック値
+            indicators.update({
+                "rsi": "N/A", "rsi_color": "#6c757d",
+                "ma_divergence": "N/A", "ma_divergence_color": "#6c757d",
+                "volume_analysis": "N/A", "volume_analysis_color": "#6c757d"
+            })
+        
+        return indicators
+    
+    def _calculate_rsi(self, prices: pd.Series, period: int = 14) -> float:
+        """RSI（Relative Strength Index）を計算"""
+        if len(prices) < period + 1:
+            return np.nan
+        
+        delta = prices.diff()
+        gain = delta.where(delta > 0, 0)
+        loss = -delta.where(delta < 0, 0)
+        
+        avg_gain = gain.rolling(window=period).mean()
+        avg_loss = loss.rolling(window=period).mean()
+        
+        rs = avg_gain / avg_loss
+        rsi = 100 - (100 / (1 + rs))
+        
+        return rsi.iloc[-1]
+    
+    def _calculate_ma_divergence(self, prices: pd.Series, period: int = 25) -> float:
+        """移動平均乖離率を計算"""
+        if len(prices) < period:
+            return np.nan
+        
+        ma = prices.rolling(window=period).mean()
+        current_price = prices.iloc[-1]
+        current_ma = ma.iloc[-1]
+        
+        if current_ma == 0:
+            return np.nan
+        
+        divergence = ((current_price - current_ma) / current_ma) * 100
+        return divergence
+    
+    def _calculate_volume_analysis(self, volumes: pd.Series, period: int = 20) -> float:
+        """出来高分析（平均出来高との比較）"""
+        if len(volumes) < period + 1:
+            return np.nan
+        
+        avg_volume = volumes.rolling(window=period).mean()
+        current_volume = volumes.iloc[-1]
+        avg_volume_current = avg_volume.iloc[-1]
+        
+        if avg_volume_current == 0:
+            return np.nan
+        
+        volume_ratio = (current_volume / avg_volume_current) * 100
+        return volume_ratio
 
     def cleanup(self):
         """リソースをクリーンアップ"""

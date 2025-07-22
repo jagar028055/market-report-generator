@@ -1,0 +1,28 @@
+{
+  "name": "market_report_generator",
+  "version": "1.0.0",
+  "description": "このプロジェクトは、前日の米国市場動向を自動で収集・解析し、チャート・AI コメント付きの HTML レポートを生成します。",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jagar028055/market-report-generator.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/jagar028055/market-report-generator/issues"
+  },
+  "homepage": "https://github.com/jagar028055/market-report-generator#readme",
+  "dependencies": {
+    "playwright": "^1.54.1"
+  }
+}

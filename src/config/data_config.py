@@ -102,7 +102,18 @@ class DataFetchConfig(BaseConfig):
         "New York Fed Index": "ニューヨーク連銀製造業景況指数",
         "Kansas City Fed Index": "カンザスシティ連銀製造業景況指数",
         "Richmond Fed Index": "リッチモンド連銀製造業景況指数",
-        "Dallas Fed Index": "ダラス連銀製造業景況指数"
+        "Dallas Fed Index": "ダラス連銀製造業景況指数",
+        "US Leading Index (MoM)  (Jun)": "米国景気先行指数（前月比）",
+        "3-Month Bill Auction": "3ヶ月短期国債入札",
+        "6-Month Bill Auction": "6ヶ月短期国債入札",
+        "API Weekly Crude Oil Stock": "API週間原油在庫",
+        "FOMC Member Bowman Speaks": "FOMC理事ボウマン発言",
+        "Fed Chair Powell Speaks": "FRB議長パウエル発言",
+        "M2 Money Supply (MoM)  (Jun)": "M2マネーサプライ（前月比）",
+        "Redbook (YoY)": "レッドブック小売売上高指数（前年比）",
+        "Richmond Manufacturing Index  (Jul)": "リッチモンド連銀製造業指数",
+        "Richmond Manufacturing Shipments  (Jul)": "リッチモンド連銀製造業出荷指数",
+        "Richmond Services Index  (Jul)": "リッチモンド連銀サービス業指数"
     })
     
     def _update_from_dict(self, config_dict: Dict[str, Any]):
