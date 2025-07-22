@@ -32,7 +32,7 @@ jobs:
       - name: Run script
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        run: python main.py
+        run: python main.py enhanced --hours-limit 24
 
       - name: Upload logs
         if: always()
