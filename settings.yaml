@@ -7,7 +7,7 @@ environment: "development"  # development/production
 # データ取得設定
 data_fetching:
   intraday_interval: "5m"
-  intraday_period_days: 7
+  intraday_period_days: 1
   chart_longterm_period: "1y"
   target_calendar_countries: ['united states']
 

@@ -54,7 +54,7 @@ class DataFetchConfig(BaseConfig):
     
     # イントラデイデータ設定
     INTRADAY_INTERVAL: str = "5m"
-    INTRADAY_PERIOD_DAYS: int = 7
+    INTRADAY_PERIOD_DAYS: int = 1
     
     # 長期データ設定
     CHART_LONGTERM_PERIOD: str = "1y"

@@ -266,8 +266,10 @@ def enhanced_main():
         
         chart_gen = create_chart_generator("integrated", charts_dir=charts_output_dir)
         grouped_charts = {"Intraday": [], "Long-Term": []}
+        static_chart_paths = {}
         
         for name, data_set in chart_data.items():
+            # インタラクティブチャート（HTML版）
             intraday_filename = f"{name.replace(' ', '_')}_intraday.html"
             if not data_set["intraday"].empty:
                 intraday_path = chart_gen.generate_intraday_chart_interactive(data_set["intraday"], name, intraday_filename)
@@ -275,12 +277,30 @@ def enhanced_main():
                     sanitized_name = name.replace(' ', '-').replace('&', 'and').replace('.', '').lower()
                     grouped_charts["Intraday"].append({"id": f"{sanitized_name}-intraday", "name": name, "path": f"charts/{os.path.basename(intraday_path)}", "interactive": True})
             
+            # 静的チャート（PNG版）- ポップアップ用
+            intraday_static_filename = f"{name.replace(' ', '_')}_intraday_static.png"
+            if not data_set["intraday"].empty:
+                static_path = chart_gen.generate_intraday_chart_static(data_set["intraday"], name, intraday_static_filename)
+                if static_path:
+                    if name not in static_chart_paths:
+                        static_chart_paths[name] = {}
+                    static_chart_paths[name]['intraday'] = f"charts/{os.path.basename(static_path)}"
+            
             longterm_filename = f"{name.replace(' ', '_')}_longterm.html"
             if not data_set["longterm"].empty:
                 longterm_path = chart_gen.generate_longterm_chart_interactive(data_set["longterm"], name, longterm_filename)
                 if longterm_path:
                     sanitized_name = name.replace(' ', '-').replace('&', 'and').replace('.', '').lower()
                     grouped_charts["Long-Term"].append({"id": f"{sanitized_name}-longterm", "name": name, "path": f"charts/{os.path.basename(longterm_path)}", "interactive": True})
+            
+            # 長期静的チャート（PNG版）
+            longterm_static_filename = f"{name.replace(' ', '_')}_longterm_static.png"
+            if not data_set["longterm"].empty:
+                static_longterm_path = chart_gen.generate_longterm_chart_static(data_set["longterm"], name, longterm_static_filename)
+                if static_longterm_path:
+                    if name not in static_chart_paths:
+                        static_chart_paths[name] = {}
+                    static_chart_paths[name]['longterm'] = f"charts/{os.path.basename(static_longterm_path)}"
         print("チャート生成完了。")
         
         # AIコメント生成（従来と同じ）
@@ -305,7 +325,8 @@ def enhanced_main():
         report_filepath = html_gen.generate_report(
             market_data=market_data, economic_indicators=economic_indicators, sector_performance=sector_performance,
             news_articles=news_articles, commentary=commentary, grouped_charts=grouped_charts,
-            sector_chart_path=f"charts/{os.path.basename(sector_chart_path)}" if sector_chart_path else None
+            sector_chart_path=f"charts/{os.path.basename(sector_chart_path)}" if sector_chart_path else None,
+            static_chart_paths=static_chart_paths
         )
         print("HTMLレポート生成完了。")
         print(f"レポートは '{report_filepath}' に出力されました。")

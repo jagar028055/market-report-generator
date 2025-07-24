@@ -86,6 +86,20 @@ class ChartGenerator:
             chart_type='static', ma_keys=ma_keys, ma_type=ma_type
         )
     
+    def generate_intraday_chart_static(self, data, ticker_name: str, filename: str):
+        """イントラデイチャートの静的版（PNG）を生成"""
+        return self.candlestick_generator.generate_intraday_chart(
+            data, ticker_name, filename, chart_type='static'
+        )
+    
+    def generate_longterm_chart_static(self, data, ticker_name: str, filename: str, 
+                                     ma_keys=None, ma_type=None):
+        """長期チャートの静的版（PNG）を生成"""
+        return self.candlestick_generator.generate_longterm_chart(
+            data, ticker_name, filename, chart_type='static', 
+            ma_keys=ma_keys, ma_type=ma_type
+        )
+    
     def generate_sector_performance_chart(self, data: dict, filename: str):
         """セクター別ETFの変化率チャートを生成"""
         return self.sector_generator.generate_sector_performance_chart(data, filename)
