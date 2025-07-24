@@ -48,8 +48,8 @@ class CandlestickChartGenerator(BaseChartGenerator):
             ma_keys = kwargs.get('ma_keys', None)
             ma_type = kwargs.get('ma_type', None)
             
-            # 移動平均を計算
-            if ma_keys:
+            # 移動平均を計算（長期チャートの場合、デフォルト設定を使用）
+            if ma_keys is not None or 'Long-Term' in title:
                 data_with_ma = self._calculate_moving_averages(data, ma_keys, ma_type)
             else:
                 data_with_ma = data.copy()
@@ -65,7 +65,7 @@ class CandlestickChartGenerator(BaseChartGenerator):
             )])
             
             # 移動平均線を追加
-            if ma_keys:
+            if ma_keys is not None or 'Long-Term' in title:
                 ma_traces = self._get_ma_traces_plotly(data_with_ma, ma_keys)
                 for trace in ma_traces:
                     fig.add_trace(trace)
@@ -126,8 +126,8 @@ class CandlestickChartGenerator(BaseChartGenerator):
             ma_keys = kwargs.get('ma_keys', None)
             ma_type = kwargs.get('ma_type', None)
             
-            # 移動平均を計算
-            if ma_keys:
+            # 移動平均を計算（長期チャートの場合、デフォルト設定を使用）
+            if ma_keys is not None or 'Long-Term' in title:
                 data_with_ma = self._calculate_moving_averages(data, ma_keys, ma_type)
             else:
                 data_with_ma = data.copy()
@@ -137,7 +137,7 @@ class CandlestickChartGenerator(BaseChartGenerator):
             
             # 移動平均のaddplotを取得
             addplots = []
-            if ma_keys:
+            if ma_keys is not None or 'Long-Term' in title:
                 addplots = self._get_ma_addplots_mplfinance(data_with_ma, ma_keys)
             
             # チャートを生成
@@ -207,16 +207,15 @@ class CandlestickChartGenerator(BaseChartGenerator):
         
         # 移動平均の情報をタイトルに追加
         ma_info = ""
-        if ma_keys:
-            used_keys = ma_keys or self.config.DEFAULT_MA_DISPLAY
-            ma_labels = [
-                self.config.MOVING_AVERAGES[key]["label"] 
-                for key in used_keys 
-                if key in self.config.MOVING_AVERAGES
-            ]
-            if ma_labels:
-                ma_type_display = ma_type or self.config.DEFAULT_MA_TYPE
-                ma_info = f" ({ma_type_display}: {', '.join(ma_labels)})"
+        used_keys = ma_keys or self.config.DEFAULT_MA_DISPLAY
+        ma_labels = [
+            self.config.MOVING_AVERAGES[key]["label"] 
+            for key in used_keys 
+            if key in self.config.MOVING_AVERAGES
+        ]
+        if ma_labels:
+            ma_type_display = ma_type or self.config.DEFAULT_MA_TYPE
+            ma_info = f" ({ma_type_display}: {', '.join(ma_labels)})"
         
         title = f"{ticker_name} Long-Term Chart (1 Year){ma_info}"
         

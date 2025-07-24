@@ -53,8 +53,8 @@
                                  data-volume-analysis-color="{{ data.volume_analysis_color if data.volume_analysis_color is defined else '#6c757d' }}"
                                  data-chart-intraday="charts/{{ name }}_intraday.html"
                                  data-chart-longterm="charts/{{ name }}_longterm.html"
-                                 data-chart-intraday-img="{% if static_chart_paths and name in static_chart_paths and 'intraday' in static_chart_paths[name] %}{{ static_chart_paths[name]['intraday'] }}{% else %}charts/{{ name.replace(' ', '_') }}_intraday.png{% endif %}"
-                                 data-chart-longterm-img="{% if static_chart_paths and name in static_chart_paths and 'longterm' in static_chart_paths[name] %}{{ static_chart_paths[name]['longterm'] }}{% else %}charts/{{ name.replace(' ', '_') }}_longterm.png{% endif %}">
+                                 data-chart-intraday-img="{% if static_chart_paths and name in static_chart_paths and 'intraday' in static_chart_paths[name] %}{{ static_chart_paths[name]['intraday'] }}{% else %}charts/{{ name.replace(' ', '_') }}_intraday_static.png{% endif %}"
+                                 data-chart-longterm-img="{% if static_chart_paths and name in static_chart_paths and 'longterm' in static_chart_paths[name] %}{{ static_chart_paths[name]['longterm'] }}{% else %}charts/{{ name.replace(' ', '_') }}_longterm_static.png{% endif %}">
                                 <div class="card-header">
                                     <div class="indicator-name">{{ name }}</div>
                                     <div class="indicator-symbol">{{ name[:3] | upper }}</div>
@@ -131,8 +131,8 @@
                                  data-volume-analysis-color="{{ data.volume_analysis_color if data.volume_analysis_color is defined else '#6c757d' }}"
                                  data-chart-intraday="charts/{{ name }}_intraday.html"
                                  data-chart-longterm="charts/{{ name }}_longterm.html"
-                                 data-chart-intraday-img="{% if static_chart_paths and name in static_chart_paths and 'intraday' in static_chart_paths[name] %}{{ static_chart_paths[name]['intraday'] }}{% else %}charts/{{ name.replace(' ', '_') }}_intraday.png{% endif %}"
-                                 data-chart-longterm-img="{% if static_chart_paths and name in static_chart_paths and 'longterm' in static_chart_paths[name] %}{{ static_chart_paths[name]['longterm'] }}{% else %}charts/{{ name.replace(' ', '_') }}_longterm.png{% endif %}">
+                                 data-chart-intraday-img="{% if static_chart_paths and name in static_chart_paths and 'intraday' in static_chart_paths[name] %}{{ static_chart_paths[name]['intraday'] }}{% else %}charts/{{ name.replace(' ', '_') }}_intraday_static.png{% endif %}"
+                                 data-chart-longterm-img="{% if static_chart_paths and name in static_chart_paths and 'longterm' in static_chart_paths[name] %}{{ static_chart_paths[name]['longterm'] }}{% else %}charts/{{ name.replace(' ', '_') }}_longterm_static.png{% endif %}">
                                 <div class="card-header">
                                     <div class="indicator-name">{{ name }}</div>
                                     <div class="indicator-symbol">{{ name.replace('米国', '').replace('年金利', 'Y') }}</div>
@@ -208,8 +208,8 @@
                                  data-volume-analysis-color="{{ data.volume_analysis_color if data.volume_analysis_color is defined else '#6c757d' }}"
                                  data-chart-intraday="charts/{{ name }}_intraday.html"
                                  data-chart-longterm="charts/{{ name }}_longterm.html"
-                                 data-chart-intraday-img="{% if static_chart_paths and name in static_chart_paths and 'intraday' in static_chart_paths[name] %}{{ static_chart_paths[name]['intraday'] }}{% else %}charts/{{ name.replace(' ', '_') }}_intraday.png{% endif %}"
-                                 data-chart-longterm-img="{% if static_chart_paths and name in static_chart_paths and 'longterm' in static_chart_paths[name] %}{{ static_chart_paths[name]['longterm'] }}{% else %}charts/{{ name.replace(' ', '_') }}_longterm.png{% endif %}">
+                                 data-chart-intraday-img="{% if static_chart_paths and name in static_chart_paths and 'intraday' in static_chart_paths[name] %}{{ static_chart_paths[name]['intraday'] }}{% else %}charts/{{ name.replace(' ', '_') }}_intraday_static.png{% endif %}"
+                                 data-chart-longterm-img="{% if static_chart_paths and name in static_chart_paths and 'longterm' in static_chart_paths[name] %}{{ static_chart_paths[name]['longterm'] }}{% else %}charts/{{ name.replace(' ', '_') }}_longterm_static.png{% endif %}">
                                 <div class="card-header">
                                     <div class="indicator-name">{{ name }}</div>
                                     <div class="indicator-symbol">{{ name.replace('DXY', '').replace('ドル指数', 'DXY').replace('ドル円', 'USDJPY').replace('ユーロドル', 'EURUSD') }}</div>
@@ -347,8 +347,8 @@
                                  data-volume-analysis-color="{{ data.volume_analysis_color if data.volume_analysis_color is defined else '#6c757d' }}"
                                  data-chart-intraday="charts/{{ name }}_intraday.html"
                                  data-chart-longterm="charts/{{ name }}_longterm.html"
-                                 data-chart-intraday-img="{% if static_chart_paths and name in static_chart_paths and 'intraday' in static_chart_paths[name] %}{{ static_chart_paths[name]['intraday'] }}{% else %}charts/{{ name.replace(' ', '_') }}_intraday.png{% endif %}"
-                                 data-chart-longterm-img="{% if static_chart_paths and name in static_chart_paths and 'longterm' in static_chart_paths[name] %}{{ static_chart_paths[name]['longterm'] }}{% else %}charts/{{ name.replace(' ', '_') }}_longterm.png{% endif %}">
+                                 data-chart-intraday-img="{% if static_chart_paths and name in static_chart_paths and 'intraday' in static_chart_paths[name] %}{{ static_chart_paths[name]['intraday'] }}{% else %}charts/{{ name.replace(' ', '_') }}_intraday_static.png{% endif %}"
+                                 data-chart-longterm-img="{% if static_chart_paths and name in static_chart_paths and 'longterm' in static_chart_paths[name] %}{{ static_chart_paths[name]['longterm'] }}{% else %}charts/{{ name.replace(' ', '_') }}_longterm_static.png{% endif %}">
                                 <div class="card-header">
                                     <div class="indicator-name">{{ name }} (恐怖指数)</div>
                                     <div class="indicator-symbol">VIX</div>

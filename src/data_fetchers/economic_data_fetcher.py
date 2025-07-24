@@ -139,14 +139,15 @@ class EconomicDataFetcher(BaseDataFetcher):
         
         # 日付と時刻を結合してdatetimeオブジェクトに変換
         try:
-            df_processed['datetime_utc'] = pd.to_datetime(
+            # investpyの時刻をそのまま使用（時刻修正なし）
+            df_processed['datetime_jst'] = pd.to_datetime(
                 df_processed['date'] + ' ' + df_processed['time'],
                 format='%d/%m/%Y %H:%M',
                 errors='coerce'
-            ).dt.tz_localize('Asia/Tokyo')  # investpyの時刻は東京時間とみなす
+            )
             
             # 変換失敗行を削除
-            df_processed.dropna(subset=['datetime_utc'], inplace=True)
+            df_processed.dropna(subset=['datetime_jst'], inplace=True)
             
             if df_processed.empty:
                 self.logger.warning("No valid datetime data after processing")
@@ -156,25 +157,25 @@ class EconomicDataFetcher(BaseDataFetcher):
             self.logger.error(f"Error processing datetime data: {e}")
             return pd.DataFrame()
         
-        # 時間範囲でフィルタリング
+        # 時間範囲でフィルタリング（タイムゾーン無視の比較）
         df_filtered = df_processed[
-            (df_processed['datetime_utc'] >= past_limit_jst) &
-            (df_processed['datetime_utc'] <= future_limit_jst)
+            (df_processed['datetime_jst'] >= past_limit_jst.replace(tzinfo=None)) &
+            (df_processed['datetime_jst'] <= future_limit_jst.replace(tzinfo=None))
         ].copy()
         
         if df_filtered.empty:
             self.logger.warning("No economic events in the specified time range")
             return pd.DataFrame()
         
-        # 発表済み/発表予定のステータスを追加
+        # 発表済み/発表予定のステータスを追加（タイムゾーン無視の比較）
         df_filtered['状態'] = np.where(
-            df_filtered['datetime_utc'] < base_time_jst, 
+            df_filtered['datetime_jst'] < base_time_jst.replace(tzinfo=None), 
             '発表済み', 
             '発表予定'
         )
         
         # 表示用のJST日時列を作成
-        df_filtered['日時(JST)'] = df_filtered['datetime_utc'].dt.strftime('%Y-%m-%d %H:%M')
+        df_filtered['日時(JST)'] = df_filtered['datetime_jst'].dt.strftime('%Y-%m-%d %H:%M')
         
         # 列名を日本語に変換
         column_rename_map = {
