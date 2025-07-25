@@ -5,6 +5,7 @@
 import investpy
 import pandas as pd
 import numpy as np
+import pytz
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional, Set
 import os
@@ -139,37 +140,41 @@ class EconomicDataFetcher(BaseDataFetcher):
         
         # 日付と時刻を結合してdatetimeオブジェクトに変換
         try:
-            # investpyの時刻をそのまま使用（時刻修正なし）
-            df_processed['datetime_jst'] = pd.to_datetime(
+            # investpyの時刻を適切にタイムゾーン処理
+            df_processed['datetime_raw'] = pd.to_datetime(
                 df_processed['date'] + ' ' + df_processed['time'],
                 format='%d/%m/%Y %H:%M',
                 errors='coerce'
             )
             
             # 変換失敗行を削除
-            df_processed.dropna(subset=['datetime_jst'], inplace=True)
+            df_processed.dropna(subset=['datetime_raw'], inplace=True)
             
             if df_processed.empty:
                 self.logger.warning("No valid datetime data after processing")
                 return pd.DataFrame()
             
+            # investpyの時刻はUTC時刻として扱い、JSTに変換
+            df_processed['datetime_utc'] = df_processed['datetime_raw'].dt.tz_localize('UTC')
+            df_processed['datetime_jst'] = df_processed['datetime_utc'].dt.tz_convert(self.jst)
+            
         except Exception as e:
             self.logger.error(f"Error processing datetime data: {e}")
             return pd.DataFrame()
         
-        # 時間範囲でフィルタリング（タイムゾーン無視の比較）
+        # 時間範囲でフィルタリング（適切なタイムゾーン比較）
         df_filtered = df_processed[
-            (df_processed['datetime_jst'] >= past_limit_jst.replace(tzinfo=None)) &
-            (df_processed['datetime_jst'] <= future_limit_jst.replace(tzinfo=None))
+            (df_processed['datetime_jst'] >= past_limit_jst) &
+            (df_processed['datetime_jst'] <= future_limit_jst)
         ].copy()
         
         if df_filtered.empty:
             self.logger.warning("No economic events in the specified time range")
             return pd.DataFrame()
         
-        # 発表済み/発表予定のステータスを追加（タイムゾーン無視の比較）
+        # 発表済み/発表予定のステータスを追加（適切なタイムゾーン比較）
         df_filtered['状態'] = np.where(
-            df_filtered['datetime_jst'] < base_time_jst.replace(tzinfo=None), 
+            df_filtered['datetime_jst'] < base_time_jst, 
             '発表済み', 
             '発表予定'
         )
