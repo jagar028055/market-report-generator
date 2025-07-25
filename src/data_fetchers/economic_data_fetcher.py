@@ -154,9 +154,9 @@ class EconomicDataFetcher(BaseDataFetcher):
                 self.logger.warning("No valid datetime data after processing")
                 return pd.DataFrame()
             
-            # investpyの時刻はUTC時刻として扱い、JSTに変換
-            df_processed['datetime_utc'] = df_processed['datetime_raw'].dt.tz_localize('UTC')
-            df_processed['datetime_jst'] = df_processed['datetime_utc'].dt.tz_convert(self.jst)
+            # investpyの時刻はUS Eastern Time（ET）として扱い、JSTに変換
+            df_processed['datetime_et'] = df_processed['datetime_raw'].dt.tz_localize('US/Eastern')
+            df_processed['datetime_jst'] = df_processed['datetime_et'].dt.tz_convert(self.jst)
             
         except Exception as e:
             self.logger.error(f"Error processing datetime data: {e}")
