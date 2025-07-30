@@ -38,7 +38,21 @@ def original_main():
         "exclude_keywords": ["スポーツ", "エンタメ", "五輪", "サッカー", "映画", "将棋", "囲碁", "芸能", "ライフ", "アングル："],
         "max_pages": 5
     }
-    news_articles = fetcher.scrape_reuters_news(hours_limit=24, **reuters_config)
+    # Reutersからのニュース取得
+    reuters_articles = fetcher.scrape_reuters_news(hours_limit=24, **reuters_config)
+    
+    # Google Docsからのニュース取得
+    google_docs_articles = []
+    google_doc_id = os.getenv("GOOGLE_DOCS_ID")
+    if google_doc_id:
+        try:
+            google_docs_articles = fetcher.get_google_docs_news(document_id=google_doc_id, hours_limit=24)
+            print(f"Google Docsから {len(google_docs_articles)} 件の記事を取得しました")
+        except Exception as e:
+            print(f"Google Docsからのニュース取得エラー: {e}")
+    
+    # 記事を統合
+    news_articles = reuters_articles + google_docs_articles
     
     chart_data = {}
     for name, ticker in fetcher.tickers.items():
@@ -246,8 +260,12 @@ def enhanced_main():
         # }
         # news_articles = news_fetcher.scrape_reuters_news(hours_limit=24, **reuters_config)
         
-        google_doc_id = "1-Fun3I_0iiv0vH1vut6fUYJ5tUC3Ls1KsE3xyQP9YxQ"
-        news_articles = news_fetcher.get_google_docs_news(document_id=google_doc_id, hours_limit=24)
+        google_doc_id = os.getenv("GOOGLE_DOCS_ID")
+        if google_doc_id:
+            news_articles = news_fetcher.get_google_docs_news(document_id=google_doc_id, hours_limit=24)
+        else:
+            print("警告: GOOGLE_DOCS_ID環境変数が設定されていません。Google Docsからのニュース取得をスキップします。")
+            news_articles = []
         
         # チャートデータ取得
         chart_data = {}

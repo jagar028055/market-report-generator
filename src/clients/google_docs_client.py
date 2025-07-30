@@ -169,11 +169,18 @@ class GoogleDocsClient:
         while i < len(lines):
             line = lines[i].strip()
             
-            # 記事エントリの開始を検出 (YYYY-MM-DD HH:MM) タイトル の形式
-            time_title_match = re.match(r'^\((\d{4}-\d{2}-\d{2} \d{2}:\d{2})\)\s*(.+)$', line)
+            # 記事エントリの開始を検出 (YYYY-MM-DD HH:MM) 絵文字? タイトル の形式
+            time_title_match = re.match(r'^\(([0-9- :]+)\)\s+(.+)$', line)
             if time_title_match:
                 time_str = time_title_match.group(1)
-                title = time_title_match.group(2).strip()
+                title_raw = time_title_match.group(2).strip()
+                
+                # タイトルから先頭の絵文字を除去
+                words = title_raw.split()
+                if words and len(words[0]) == 1:  # 最初の単語が1文字（絵文字の可能性）
+                    title = ' '.join(words[1:])
+                else:
+                    title = title_raw
                 
                 # 時刻をパース
                 try:
@@ -184,6 +191,10 @@ class GoogleDocsClient:
                     continue
                 
                 # 時間制限チェック
+                logger.debug(f"時間制限チェック: {title}")
+                logger.debug(f"  記事時刻: {published_time}")
+                logger.debug(f"  カットオフ: {cutoff_time}")
+                logger.debug(f"  制限内?: {published_time >= cutoff_time}")
                 if published_time < cutoff_time:
                     logger.debug(f"時間制限外の記事をスキップ: {title}")
                     i += 1
@@ -193,39 +204,55 @@ class GoogleDocsClient:
                 url = ""
                 body = ""
                 
+                logger.debug(f"URL取得試行: 次の行をチェック")
                 if i + 1 < len(lines):
                     next_line = lines[i + 1].strip()
+                    logger.debug(f"  次の行: {repr(next_line[:50])}...")
                     if next_line.startswith('http'):
                         url = next_line
+                        logger.debug(f"  URL取得成功: {url}")
                         i += 2  # タイトル行とURL行をスキップ
+                    else:
+                        logger.debug(f"  URL取得失敗: httpで始まらない")
+                else:
+                    logger.debug(f"  URL取得失敗: 次の行が存在しない")
+                
+                # URLが取得できた場合のみ本文取得を実行
+                if url:
+                    logger.debug(f"本文取得開始")
+                    # 記事本文を取得（次の記事まで）
+                    body_lines = []
+                    while i < len(lines):
+                        body_line = lines[i].strip()
                         
-                        # 記事本文を取得（次の記事まで）
-                        body_lines = []
-                        while i < len(lines):
-                            body_line = lines[i].strip()
-                            
-                            # 次の記事の開始を検出または区切り線を検出
-                            if re.match(r'^\(\d{4}-\d{2}-\d{2} \d{2}:\d{2}\)', body_line) or body_line.startswith('--'):
-                                break
-                            
-                            if body_line:  # 空行は無視
-                                body_lines.append(body_line)
-                            i += 1
+                        # 次の記事の開始を検出または記事区切り線を検出
+                        if re.match(r'^\([0-9- :]+\)', body_line) or body_line == '--' * 50:
+                            break
                         
-                        body = '\n'.join(body_lines)
-                        
-                        # 記事オブジェクトを作成
-                        if title and body:
-                            article = NewsArticle(
-                                title=title,
-                                url=url,
-                                published_jst=published_time,
-                                body=body
-                            )
-                            articles.append(article)
-                            logger.debug(f"記事を追加: {title[:50]}...")
-                        
-                        continue  # while ループの次の反復へ
+                        if body_line:  # 空行は無視
+                            body_lines.append(body_line)
+                        i += 1
+                    
+                    body = '\n'.join(body_lines)
+                    logger.debug(f"本文取得完了: {len(body)} 文字")
+                    
+                    # 記事オブジェクトを作成
+                    if title and body:
+                        logger.debug(f"記事オブジェクト作成: {title}")
+                        article = NewsArticle(
+                            title=title,
+                            url=url,
+                            published_jst=published_time,
+                            body=body
+                        )
+                        articles.append(article)
+                        logger.debug(f"記事を追加: {title[:50]}...")
+                    else:
+                        logger.debug(f"記事オブジェクト作成失敗: title={bool(title)}, body={bool(body)}")
+                else:
+                    logger.debug(f"URL取得失敗のため記事をスキップ")
+                
+                continue  # while ループの次の反復へ
                 
             i += 1
         
