@@ -24,3 +24,11 @@ node_modules/
 
 # Output files
 output/
+
+# MCP (Model Context Protocol) related files
+.mcp/
+mcp-logs/
+*.mcp.log
+
+# Serena development environment files
+.serena/
