@@ -379,11 +379,11 @@ class DataFetcher:
                     sector_performance[name] = round(change_percent, 2) if change_percent is not None else None
                     print(f"  ✅ {name} data fetched: {change_percent:.2f}%")
                 else:
-                    sector_performance[name] = "N/A"
+                    sector_performance[name] = None
                     print(f"  ❌ {name} data empty or insufficient.")
             except Exception as e:
                 print(f"  ❌ Error fetching data for sector ETF {name} ({ticker}): {e}")
-                sector_performance[name] = "N/A"
+                sector_performance[name] = None
         return sector_performance
 
     def scrape_reuters_news(self, query: str, hours_limit: int = 24,

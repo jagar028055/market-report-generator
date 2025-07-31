@@ -330,7 +330,7 @@ def enhanced_main():
         # セクター別ETFチャート生成
         print("\n[4/5] セクター別ETFチャート生成中...")
         if sector_performance:
-            sector_performance_sorted = dict(sorted(sector_performance.items(), key=lambda item: item[1] if item[1] is not None else -float('inf'), reverse=True))
+            sector_performance_sorted = dict(sorted(sector_performance.items(), key=lambda item: item[1] if isinstance(item[1], (int, float)) and item[1] is not None else -float('inf'), reverse=True))
             sector_chart_path = chart_gen.generate_sector_performance_chart(sector_performance_sorted, "sector_performance_chart.html")
             print("セクター別ETFチャート生成完了。")
         else:
