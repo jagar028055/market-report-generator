@@ -46,6 +46,7 @@ jobs:
       - name: Run script
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GOOGLE_DOCS_ID: ${{ secrets.GOOGLE_DOCS_ID }}
         run: python main.py enhanced --hours-limit 24
 
       - name: Upload logs
