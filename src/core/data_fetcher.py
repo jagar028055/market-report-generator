@@ -128,6 +128,29 @@ class DataFetcher:
                 print(f"Warning: Unable to initialise Gemini model: {e}")
                 self.gemini_model = None
 
+    def get_previous_business_day(self, current_date_jst):
+        """
+        指定された日付の前営業日を取得する。
+        月曜日の場合は前の金曜日、それ以外は前日を返す。
+        
+        Args:
+            current_date_jst: 現在の日時（JST）
+            
+        Returns:
+            前営業日の日付
+        """
+        previous_day = current_date_jst - timedelta(days=1)
+        
+        # 月曜日(0)の場合は金曜日まで戻る
+        if current_date_jst.weekday() == 0:  # Monday
+            previous_day = current_date_jst - timedelta(days=3)  # Go back to Friday
+        
+        # 週末の場合はさらに戻る
+        while previous_day.weekday() >= 5:  # Saturday or Sunday
+            previous_day -= timedelta(days=1)
+            
+        return previous_day
+
     def get_market_data(self):
         """主要指標の直近値、前日比、変化率を取得する"""
         market_data = {}
@@ -685,13 +708,19 @@ class DataFetcher:
                 df_final = df_processed[df_processed['取引日_NY'] == latest_trading_day_ny].copy()
 
             elif ticker in self.ASSET_CLASSES['24H_ASSET']:
-                print(f"  Info: {ticker} is 24H_ASSET. Processing for JST 7am start.")
+                print(f"  Info: {ticker} is 24H_ASSET. Processing for previous business day.")
                 df_processed['日時_JST'] = df_processed[datetime_col].dt.tz_convert(jst)
                 now_jst = datetime.now(jst)
-                today_7am_jst = now_jst.replace(hour=7, minute=0, second=0, microsecond=0)
-                start_time_jst = today_7am_jst - timedelta(days=1) if now_jst < today_7am_jst else today_7am_jst
-                end_time_jst = start_time_jst + timedelta(days=1)
-                print(f"  Info: Extraction period (JST) for {ticker}: {start_time_jst.strftime('%Y-%m-%d %H:%M')} to {end_time_jst.strftime('%Y-%m-%d %H:%M')}.")
+                
+                # 前営業日を取得
+                previous_business_day = self.get_previous_business_day(now_jst)
+                
+                # 前営業日の7時から当日の7時まで（24時間分）
+                start_time_jst = previous_business_day.replace(hour=7, minute=0, second=0, microsecond=0)
+                end_time_jst = now_jst.replace(hour=7, minute=0, second=0, microsecond=0)
+                
+                print(f"  Info: Previous business day for {ticker}: {previous_business_day.strftime('%Y-%m-%d')}")
+                print(f"  Info: Extraction period (JST) for {ticker}: {start_time_jst.strftime('%Y-%m-%d %H:%M')} to {end_time_jst.strftime('%Y-%m-%d %H:%M')}")
                 df_final = df_processed[(df_processed['日時_JST'] >= start_time_jst) & (df_processed['日時_JST'] < end_time_jst)].copy()
             else:
                 print(f"  Info: {ticker} is neither US_STOCK nor 24H_ASSET. Converting to JST directly.")
