@@ -26,6 +26,29 @@ class MarketDataFetcher(BaseDataFetcher):
         self.asset_classes = self.data_config.ASSET_CLASSES
         
         self.logger.info(f"Initialized MarketDataFetcher with {len(self.tickers)} tickers")
+
+    def get_previous_business_day(self, current_date_jst):
+        """
+        指定された日付の前営業日を取得する。
+        月曜日の場合は前の金曜日、それ以外は前日を返す。
+        
+        Args:
+            current_date_jst: 現在の日時（JST）
+            
+        Returns:
+            前営業日の日付
+        """
+        previous_day = current_date_jst - timedelta(days=1)
+        
+        # 月曜日(0)の場合は金曜日まで戻る
+        if current_date_jst.weekday() == 0:  # Monday
+            previous_day = current_date_jst - timedelta(days=3)  # Go back to Friday
+        
+        # 週末の場合はさらに戻る
+        while previous_day.weekday() >= 5:  # Saturday or Sunday
+            previous_day -= timedelta(days=1)
+            
+        return previous_day
     
     def fetch_data(self, **kwargs) -> Dict[str, Any]:
         """市場データを取得"""
@@ -310,17 +333,18 @@ class MarketDataFetcher(BaseDataFetcher):
         return df_filtered
     
     def _process_24h_asset_intraday(self, df: pd.DataFrame, ticker: str, datetime_col: str) -> pd.DataFrame:
-        """24時間取引資産のイントラデイデータ処理"""
+        """24時間取引資産のイントラデイデータ処理（前営業日ベース）"""
         self.logger.debug(f"Processing 24H asset intraday data for {ticker}")
         
         df['日時_JST'] = df[datetime_col].dt.tz_convert(self.jst)
         
-        # JST 7時開始の24時間データを取得
+        # 前営業日を取得
         now_jst = datetime.now(self.jst)
-        today_7am_jst = now_jst.replace(hour=7, minute=0, second=0, microsecond=0)
+        previous_business_day = self.get_previous_business_day(now_jst)
         
-        start_time_jst = today_7am_jst - timedelta(days=1) if now_jst < today_7am_jst else today_7am_jst
-        end_time_jst = start_time_jst + timedelta(days=1)
+        # 前営業日の7時から当日の7時まで（24時間分）
+        start_time_jst = previous_business_day.replace(hour=7, minute=0, second=0, microsecond=0)
+        end_time_jst = now_jst.replace(hour=7, minute=0, second=0, microsecond=0)
         
         df_filtered = df[
             (df['日時_JST'] >= start_time_jst) & 
@@ -329,6 +353,7 @@ class MarketDataFetcher(BaseDataFetcher):
         
         df_filtered['日時'] = df_filtered[datetime_col].dt.tz_convert(self.jst)
         
+        self.logger.debug(f"Previous business day for {ticker}: {previous_business_day.strftime('%Y-%m-%d')}")
         self.logger.debug(f"24H asset extraction period for {ticker}: {start_time_jst.strftime('%Y-%m-%d %H:%M')} to {end_time_jst.strftime('%Y-%m-%d %H:%M')}")
         
         return df_filtered
