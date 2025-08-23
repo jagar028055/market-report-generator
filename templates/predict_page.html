@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Market Report Neo - 予測分析</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        .control-panel {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .prediction-chart {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            min-height: 400px;
+        }
+        .accuracy-table {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            border-radius: 10px;
+        }
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .model-checkbox {
+            margin-right: 15px;
+            margin-bottom: 10px;
+        }
+        .period-radio {
+            margin-right: 20px;
+            margin-bottom: 10px;
+        }
+        .btn-analyze {
+            background: linear-gradient(45deg, #007bff, #0056b3);
+            border: none;
+            color: white;
+            font-weight: bold;
+            padding: 12px 30px;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+        }
+        .btn-analyze:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,123,255,0.3);
+            color: white;
+        }
+        .ticker-badge {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+        .accuracy-score-excellent {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .accuracy-score-good {
+            color: #17a2b8;
+            font-weight: bold;
+        }
+        .accuracy-score-fair {
+            color: #ffc107;
+            font-weight: bold;
+        }
+        .accuracy-score-poor {
+            color: #dc3545;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-chart-line me-2"></i>Market Report Neo
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/">サマリー</a>
+                <a class="nav-link active" href="/predict">予測分析</a>
+                <a class="nav-link" href="/risk">リスク分析</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- パンくずリスト -->
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/" class="text-decoration-none">サマリー</a></li>
+                <li class="breadcrumb-item active">予測分析</li>
+            </ol>
+        </nav>
+
+        <!-- ヘッダー -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <i class="fas fa-crystal-ball text-primary" style="font-size: 2.5rem;"></i>
+                    </div>
+                    <div>
+                        <h1 class="mb-1">予測分析</h1>
+                        <p class="mb-0 text-muted">
+                            <span id="stock-info">
+                                {% if ticker %}
+                                    <span class="ticker-badge">{{ ticker }}</span>
+                                {% else %}
+                                    銘柄を選択して高度な価格予測を実行
+                                {% endif %}
+                            </span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 銘柄選択（tickerが指定されていない場合） -->
+        {% if not ticker %}
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-search me-2"></i>分析する銘柄を選択
+                        </h5>
+                        <div class="row">
+                            <div class="col-md-8">
+                                <select id="ticker-select" class="form-select">
+                                    <option value="">銘柄を選択してください...</option>
+                                    <option value="AAPL">AAPL - Apple Inc.</option>
+                                    <option value="GOOGL">GOOGL - Alphabet Inc.</option>
+                                    <option value="MSFT">MSFT - Microsoft Corp.</option>
+                                    <option value="TSLA">TSLA - Tesla Inc.</option>
+                                    <option value="NVDA">NVDA - NVIDIA Corp.</option>
+                                    <option value="AMZN">AMZN - Amazon.com Inc.</option>
+                                    <option value="META">META - Meta Platforms Inc.</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <button id="select-ticker-btn" class="btn btn-primary w-100" disabled>
+                                    <i class="fas fa-arrow-right me-2"></i>分析開始
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <!-- コントロールパネル -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="control-panel position-relative" id="control-panel">
+                    <h5 class="mb-3">
+                        <i class="fas fa-sliders-h me-2"></i>分析条件設定
+                    </h5>
+                    
+                    <!-- 予測モデル選択 -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">予測モデル:</label>
+                        <div>
+                            <div class="form-check form-check-inline model-checkbox">
+                                <input class="form-check-input" type="checkbox" id="model-ensemble" value="ensemble" checked>
+                                <label class="form-check-label" for="model-ensemble">
+                                    <i class="fas fa-layer-group me-1"></i>Ensemble
+                                </label>
+                            </div>
+                            <div class="form-check form-check-inline model-checkbox">
+                                <input class="form-check-input" type="checkbox" id="model-xgboost" value="xgboost">
+                                <label class="form-check-label" for="model-xgboost">
+                                    <i class="fas fa-tree me-1"></i>XGBoost
+                                </label>
+                            </div>
+                            <div class="form-check form-check-inline model-checkbox">
+                                <input class="form-check-input" type="checkbox" id="model-arima" value="arima">
+                                <label class="form-check-label" for="model-arima">
+                                    <i class="fas fa-wave-square me-1"></i>ARIMA
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 予測期間選択 -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">予測期間:</label>
+                        <div>
+                            <div class="form-check form-check-inline period-radio">
+                                <input class="form-check-input" type="radio" name="period" id="period-1w" value="1w">
+                                <label class="form-check-label" for="period-1w">
+                                    <i class="fas fa-calendar-week me-1"></i>1週間
+                                </label>
+                            </div>
+                            <div class="form-check form-check-inline period-radio">
+                                <input class="form-check-input" type="radio" name="period" id="period-1m" value="1m" checked>
+                                <label class="form-check-label" for="period-1m">
+                                    <i class="fas fa-calendar-alt me-1"></i>1ヶ月
+                                </label>
+                            </div>
+                            <div class="form-check form-check-inline period-radio">
+                                <input class="form-check-input" type="radio" name="period" id="period-3m" value="3m">
+                                <label class="form-check-label" for="period-3m">
+                                    <i class="fas fa-calendar me-1"></i>3ヶ月
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 分析実行ボタン -->
+                    <div class="text-center">
+                        <button id="analyze-btn" class="btn btn-analyze">
+                            <i class="fas fa-play me-2"></i>分析実行
+                        </button>
+                    </div>
+
+                    <!-- ローディングオーバーレイ -->
+                    <div id="control-loading" class="loading-overlay" style="display: none;">
+                        <div class="text-center">
+                            <div class="loading-spinner mb-3"></div>
+                            <p class="mb-0">分析実行中...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 予測結果チャート -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="prediction-chart position-relative" id="chart-container">
+                    <h5 class="mb-3">
+                        <i class="fas fa-chart-line me-2"></i>予測結果チャート
+                    </h5>
+                    <div id="prediction-chart" style="width: 100%; height: 400px;"></div>
+                    
+                    <!-- チャート用ローディング -->
+                    <div id="chart-loading" class="loading-overlay" style="display: none;">
+                        <div class="text-center">
+                            <div class="loading-spinner mb-3"></div>
+                            <p class="mb-0">チャート生成中...</p>
+                        </div>
+                    </div>
+
+                    <!-- 初期メッセージ -->
+                    <div id="chart-empty-message" class="text-center py-5">
+                        <i class="fas fa-chart-line text-muted mb-3" style="font-size: 3rem;"></i>
+                        <h6 class="text-muted">分析実行ボタンをクリックして予測チャートを表示</h6>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 精度評価テーブル -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="accuracy-table">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-trophy me-2"></i>精度評価
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover" id="accuracy-table">
+                                    <thead>
+                                        <tr>
+                                            <th>モデル名</th>
+                                            <th>RMSE</th>
+                                            <th>MAPE (%)</th>
+                                            <th>R²</th>
+                                            <th>総合評価</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="accuracy-tbody">
+                                        <tr>
+                                            <td colspan="5" class="text-center text-muted py-4">
+                                                分析を実行すると精度評価が表示されます
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // グローバル変数
+        let currentTicker = '{{ ticker or "" }}';
+        let predictionData = null;
+
+        // ページ読み込み時の初期化
+        document.addEventListener('DOMContentLoaded', function() {
+            {% if not ticker %}
+            initTickerSelection();
+            {% else %}
+            initPredictionPage();
+            {% endif %}
+        });
+
+        // 銘柄選択の初期化
+        function initTickerSelection() {
+            const tickerSelect = document.getElementById('ticker-select');
+            const selectBtn = document.getElementById('select-ticker-btn');
+
+            tickerSelect.addEventListener('change', function() {
+                selectBtn.disabled = !this.value;
+            });
+
+            selectBtn.addEventListener('click', function() {
+                const selectedTicker = tickerSelect.value;
+                if (selectedTicker) {
+                    window.location.href = `/predict/${selectedTicker}`;
+                }
+            });
+        }
+
+        // 予測分析ページの初期化
+        function initPredictionPage() {
+            const analyzeBtn = document.getElementById('analyze-btn');
+            analyzeBtn.addEventListener('click', runPredictionAnalysis);
+
+            // 初期チャートメッセージを表示
+            showEmptyChartMessage();
+        }
+
+        // 予測分析の実行
+        async function runPredictionAnalysis() {
+            if (!currentTicker) return;
+
+            // 選択されたモデルを取得
+            const selectedModels = [];
+            document.querySelectorAll('input[type="checkbox"]:checked').forEach(checkbox => {
+                selectedModels.push(checkbox.value);
+            });
+
+            if (selectedModels.length === 0) {
+                showAlert('少なくとも1つのモデルを選択してください', 'warning');
+                return;
+            }
+
+            // 選択された期間を取得
+            const selectedPeriod = document.querySelector('input[name="period"]:checked').value;
+
+            // ローディング表示
+            showLoading();
+
+            try {
+                // APIを呼び出し
+                const params = new URLSearchParams({
+                    period: selectedPeriod,
+                    ...selectedModels.reduce((acc, model, index) => {
+                        acc[`models`] = selectedModels.join(',');
+                        return acc;
+                    }, {})
+                });
+
+                const response = await fetch(`/api/predict/${currentTicker}?${params}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                predictionData = await response.json();
+
+                if (predictionData.status === 'success') {
+                    updatePredictionChart(predictionData.chart_data);
+                    updateAccuracyTable(predictionData.accuracy_metrics);
+                } else {
+                    throw new Error(predictionData.error || '分析エラー');
+                }
+
+            } catch (error) {
+                console.error('予測分析エラー:', error);
+                showAlert('分析の実行に失敗しました: ' + error.message, 'danger');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // 予測チャートの更新
+        function updatePredictionChart(chartData) {
+            if (!chartData) {
+                showEmptyChartMessage();
+                return;
+            }
+
+            const traces = [];
+
+            // 履歴データのトレース
+            if (chartData.historical) {
+                traces.push({
+                    x: chartData.historical.map(d => d.date),
+                    y: chartData.historical.map(d => d.close),
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: '実績データ',
+                    line: { color: '#6c757d', width: 2 }
+                });
+            }
+
+            // 予測データのトレース
+            if (chartData.forecasts) {
+                const colors = {
+                    'ensemble': '#007bff',
+                    'xgboost': '#28a745', 
+                    'arima': '#dc3545'
+                };
+
+                Object.entries(chartData.forecasts).forEach(([modelName, forecast]) => {
+                    if (forecast.predictions) {
+                        traces.push({
+                            x: forecast.predictions.map(d => d.date),
+                            y: forecast.predictions.map(d => d.predicted_value),
+                            type: 'scatter',
+                            mode: 'lines+markers',
+                            name: `${modelName.toUpperCase()} 予測`,
+                            line: { 
+                                color: colors[modelName] || '#17a2b8', 
+                                width: 3,
+                                dash: 'dash'
+                            },
+                            marker: { size: 6 }
+                        });
+                    }
+                });
+            }
+
+            const layout = {
+                title: {
+                    text: `${currentTicker} 価格予測`,
+                    font: { size: 18 }
+                },
+                xaxis: {
+                    title: '日付',
+                    gridcolor: '#e9ecef'
+                },
+                yaxis: {
+                    title: '価格 ($)',
+                    gridcolor: '#e9ecef'
+                },
+                legend: {
+                    orientation: 'h',
+                    x: 0,
+                    y: -0.2
+                },
+                margin: { t: 60, r: 30, b: 80, l: 60 },
+                plot_bgcolor: '#ffffff',
+                paper_bgcolor: '#ffffff'
+            };
+
+            const config = {
+                responsive: true,
+                displayModeBar: true,
+                displaylogo: false,
+                modeBarButtonsToRemove: ['pan2d', 'lasso2d', 'select2d']
+            };
+
+            Plotly.newPlot('prediction-chart', traces, layout, config);
+            hideEmptyChartMessage();
+        }
+
+        // 精度評価テーブルの更新
+        function updateAccuracyTable(accuracyMetrics) {
+            const tbody = document.getElementById('accuracy-tbody');
+            
+            if (!accuracyMetrics || Object.keys(accuracyMetrics).length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-4">
+                            精度評価データがありません
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = Object.entries(accuracyMetrics).map(([modelName, metrics]) => {
+                const rmse = metrics.rmse || 0;
+                const mape = metrics.mape || 0;
+                const r2 = metrics.r2 || 0;
+                
+                // 総合評価の計算（簡易版）
+                let overallScore = 'poor';
+                if (r2 > 0.8 && mape < 5) overallScore = 'excellent';
+                else if (r2 > 0.6 && mape < 10) overallScore = 'good';
+                else if (r2 > 0.4 && mape < 15) overallScore = 'fair';
+
+                const scoreLabels = {
+                    'excellent': '優秀',
+                    'good': '良好',
+                    'fair': '普通',
+                    'poor': '改善要'
+                };
+
+                return `
+                    <tr>
+                        <td><strong>${modelName.toUpperCase()}</strong></td>
+                        <td>${rmse.toFixed(3)}</td>
+                        <td>${mape.toFixed(2)}%</td>
+                        <td>${r2.toFixed(3)}</td>
+                        <td>
+                            <span class="accuracy-score-${overallScore}">
+                                ${scoreLabels[overallScore]}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // ローディング表示
+        function showLoading() {
+            document.getElementById('control-loading').style.display = 'flex';
+            document.getElementById('chart-loading').style.display = 'flex';
+        }
+
+        // ローディング非表示
+        function hideLoading() {
+            document.getElementById('control-loading').style.display = 'none';
+            document.getElementById('chart-loading').style.display = 'none';
+        }
+
+        // 空のチャートメッセージ表示
+        function showEmptyChartMessage() {
+            document.getElementById('chart-empty-message').style.display = 'block';
+        }
+
+        // 空のチャートメッセージ非表示
+        function hideEmptyChartMessage() {
+            document.getElementById('chart-empty-message').style.display = 'none';
+        }
+
+        // アラート表示
+        function showAlert(message, type = 'info') {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+            alertDiv.innerHTML = `
+                <i class="fas fa-${type === 'danger' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'} me-2"></i>
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            const container = document.querySelector('.container');
+            container.insertBefore(alertDiv, container.firstChild);
+            
+            // 5秒後に自動で消去
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

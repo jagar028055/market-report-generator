@@ -18,7 +18,9 @@ from src.async_processors.task_manager import TaskManager, TaskPriority
 from src.utils.exceptions import MarketReportException
 from src.utils.error_handler import ErrorHandler
 from src.config import get_system_config
+from src.api import create_api_routes
 import logging
+from flask import Flask, render_template
 
 def original_main():
     # This is the original main function.
@@ -361,6 +363,66 @@ def enhanced_main():
         raise
 
 
+def start_web_server(port: int = 5000, debug: bool = False):
+    """新しいUI用のWebサーバーを起動"""
+    
+    # ログ設定
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+    logger = logging.getLogger(__name__)
+    
+    try:
+        load_dotenv()
+        print("--- Market Report Web Server 起動中 ---")
+        
+        # Flaskアプリ作成
+        app = Flask(__name__, 
+                   template_folder='templates',
+                   static_folder='static')
+        
+        # APIルート追加
+        create_api_routes(app)
+        
+        # ページルート追加
+        @app.route('/')
+        def index():
+            """サマリーページ"""
+            return render_template('summary_page.html')
+        
+        @app.route('/predict')
+        @app.route('/predict/<ticker>')
+        def predict_page(ticker=None):
+            """予測分析ページ"""
+            return render_template('predict_page.html', ticker=ticker)
+        
+        @app.route('/risk')
+        @app.route('/risk/<ticker>')
+        def risk_page(ticker=None):
+            """リスク分析ページ"""
+            return render_template('risk_page.html', ticker=ticker)
+        
+        # エラーハンドラー
+        @app.errorhandler(404)
+        def not_found(error):
+            return render_template('error.html', error="ページが見つかりません"), 404
+        
+        @app.errorhandler(500)
+        def internal_error(error):
+            return render_template('error.html', error="内部サーバーエラー"), 500
+        
+        print(f"Webサーバーを開始します: http://localhost:{port}")
+        print("新しいUIにアクセスしてください:")
+        print(f"  - サマリーページ: http://localhost:{port}/")
+        print(f"  - 予測分析: http://localhost:{port}/predict")
+        print(f"  - リスク分析: http://localhost:{port}/risk")
+        
+        # サーバー起動
+        app.run(host='0.0.0.0', port=port, debug=debug)
+        
+    except Exception as e:
+        logger.error(f"Web server failed: {e}")
+        raise
+
+
 if __name__ == "__main__":
     # 実行モードの選択
     import sys
@@ -378,8 +440,12 @@ if __name__ == "__main__":
         elif mode == "original":
             print("従来版モードで実行中...")
             original_main()
+        elif mode == "server" or mode == "web":
+            print("Webサーバーモードで実行中...")
+            port = int(sys.argv[2]) if len(sys.argv) > 2 else 5000
+            start_web_server(port=port, debug=True)
         else:
-            print("有効なモード: async, enhanced, original")
+            print("有効なモード: async, enhanced, original, server, web")
             sys.exit(1)
         
         with open("success.log", "w") as f:

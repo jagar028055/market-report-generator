@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Market Report Neo - サマリー</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        .market-summary-card {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            border-radius: 10px;
+        }
+        .market-summary-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .mini-chart {
+            height: 60px;
+            margin: 10px 0;
+        }
+        .price-positive {
+            color: #28a745;
+        }
+        .price-negative {
+            color: #dc3545;
+        }
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .ai-commentary {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-left: 4px solid #007bff;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .stock-analysis-table {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+        .btn-analysis {
+            padding: 5px 12px;
+            font-size: 0.85rem;
+            border-radius: 5px;
+        }
+        .prediction-arrow-up::before {
+            content: "▲";
+            color: #28a745;
+            font-weight: bold;
+        }
+        .prediction-arrow-down::before {
+            content: "▼";
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .risk-low {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .risk-medium {
+            color: #ffc107;
+            font-weight: bold;
+        }
+        .risk-high {
+            color: #dc3545;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-chart-line me-2"></i>Market Report Neo
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link active" href="/">サマリー</a>
+                <a class="nav-link" href="/predict">予測分析</a>
+                <a class="nav-link" href="/risk">リスク分析</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- 更新時間表示 -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="alert alert-info d-flex align-items-center">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <span>最終更新: <span id="last-updated">読み込み中...</span></span>
+                    <button id="refresh-btn" class="btn btn-sm btn-outline-info ms-auto">
+                        <i class="fas fa-sync-alt"></i> 更新
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 主要指数 -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <h2 class="mb-3">
+                    <i class="fas fa-tachometer-alt me-2"></i>本日のマーケットサマリー
+                </h2>
+            </div>
+            <div id="market-indices" class="col-12">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <div class="card market-summary-card">
+                            <div class="card-body text-center">
+                                <h5 class="card-title">S&P 500</h5>
+                                <div id="sp500-mini-chart" class="mini-chart"></div>
+                                <h4 id="sp500-price" class="mb-1">
+                                    <div class="loading-spinner"></div>
+                                </h4>
+                                <p id="sp500-change" class="mb-0">読み込み中...</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card market-summary-card">
+                            <div class="card-body text-center">
+                                <h5 class="card-title">NASDAQ</h5>
+                                <div id="nasdaq-mini-chart" class="mini-chart"></div>
+                                <h4 id="nasdaq-price" class="mb-1">
+                                    <div class="loading-spinner"></div>
+                                </h4>
+                                <p id="nasdaq-change" class="mb-0">読み込み中...</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card market-summary-card">
+                            <div class="card-body text-center">
+                                <h5 class="card-title">DOW 30</h5>
+                                <div id="dow-mini-chart" class="mini-chart"></div>
+                                <h4 id="dow-price" class="mb-1">
+                                    <div class="loading-spinner"></div>
+                                </h4>
+                                <p id="dow-change" class="mb-0">読み込み中...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AIコメント -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <h2 class="mb-3">
+                    <i class="fas fa-robot me-2"></i>AIによる市況コメント
+                </h2>
+                <div id="ai-commentary" class="ai-commentary">
+                    <div class="d-flex align-items-center">
+                        <div class="loading-spinner me-2"></div>
+                        <span>AIコメントを生成中...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 主要銘柄の分析 -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <h2 class="mb-3">
+                    <i class="fas fa-chart-bar me-2"></i>主要銘柄の分析
+                </h2>
+                <div class="stock-analysis-table">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0" id="stocks-table">
+                            <thead class="table-primary">
+                                <tr>
+                                    <th>銘柄名</th>
+                                    <th>現在価格</th>
+                                    <th>1週間後予測</th>
+                                    <th>リスク(VaR)</th>
+                                    <th>詳細分析</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stocks-tbody">
+                                <tr>
+                                    <td colspan="5" class="text-center">
+                                        <div class="loading-spinner me-2"></div>
+                                        データを読み込み中...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // グローバル変数
+        let summaryData = null;
+
+        // ページ読み込み時の初期化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSummaryData();
+            
+            // 更新ボタンのイベントリスナー
+            document.getElementById('refresh-btn').addEventListener('click', function() {
+                this.innerHTML = '<div class="loading-spinner"></div> 更新中...';
+                loadSummaryData();
+            });
+        });
+
+        // サマリーデータの読み込み
+        async function loadSummaryData() {
+            try {
+                const response = await fetch('/api/summary');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                summaryData = await response.json();
+                
+                if (summaryData.status === 'success') {
+                    updateLastUpdated(summaryData.timestamp);
+                    updateMarketIndices(summaryData.major_indices);
+                    updateAICommentary(summaryData.ai_commentary);
+                    updateStocksTable(summaryData.stock_summaries);
+                } else {
+                    throw new Error(summaryData.error || 'データ取得エラー');
+                }
+                
+            } catch (error) {
+                console.error('データ取得エラー:', error);
+                showError('データの取得に失敗しました: ' + error.message);
+            } finally {
+                // 更新ボタンを元に戻す
+                const refreshBtn = document.getElementById('refresh-btn');
+                refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> 更新';
+            }
+        }
+
+        // 最終更新時間の更新
+        function updateLastUpdated(timestamp) {
+            const date = new Date(timestamp);
+            document.getElementById('last-updated').textContent = 
+                date.toLocaleString('ja-JP', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+        }
+
+        // 主要指数の更新
+        function updateMarketIndices(indices) {
+            updateIndexCard('sp500', indices.SP500 || {});
+            updateIndexCard('nasdaq', indices.NASDAQ || {});
+            updateIndexCard('dow', indices.DOW30 || {});
+        }
+
+        // 個別指数カードの更新
+        function updateIndexCard(indexId, indexData) {
+            const price = indexData.current_price || 0;
+            const change = indexData.change_percent || 0;
+            const chartData = indexData.chart_data || [];
+
+            // 価格の更新
+            const priceElement = document.getElementById(`${indexId}-price`);
+            priceElement.textContent = price.toLocaleString('ja-JP', {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 2
+            });
+
+            // 変動率の更新
+            const changeElement = document.getElementById(`${indexId}-change`);
+            const changeClass = change >= 0 ? 'price-positive' : 'price-negative';
+            const changeSymbol = change >= 0 ? '+' : '';
+            changeElement.textContent = `${changeSymbol}${change.toFixed(2)}%`;
+            changeElement.className = `mb-0 ${changeClass}`;
+
+            // ミニチャートの描画
+            if (chartData.length > 0) {
+                drawMiniChart(`${indexId}-mini-chart`, chartData);
+            }
+        }
+
+        // ミニチャートの描画
+        function drawMiniChart(elementId, data) {
+            const dates = data.map(d => d.date);
+            const prices = data.map(d => d.close);
+
+            const trace = {
+                x: dates,
+                y: prices,
+                type: 'scatter',
+                mode: 'lines',
+                line: {
+                    color: '#007bff',
+                    width: 2
+                },
+                showlegend: false
+            };
+
+            const layout = {
+                margin: { t: 0, r: 0, b: 0, l: 0 },
+                xaxis: { visible: false },
+                yaxis: { visible: false },
+                showlegend: false,
+                paper_bgcolor: 'transparent',
+                plot_bgcolor: 'transparent'
+            };
+
+            const config = {
+                displayModeBar: false,
+                staticPlot: true
+            };
+
+            Plotly.newPlot(elementId, [trace], layout, config);
+        }
+
+        // AIコメントの更新
+        function updateAICommentary(commentary) {
+            const element = document.getElementById('ai-commentary');
+            element.innerHTML = `
+                <div class="d-flex align-items-start">
+                    <i class="fas fa-robot me-3 mt-1" style="color: #007bff; font-size: 1.5rem;"></i>
+                    <div>
+                        <h5 class="mb-2">AI市況分析</h5>
+                        <p class="mb-0">${commentary || 'AIコメントの生成に失敗しました。'}</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 株式テーブルの更新
+        function updateStocksTable(stocks) {
+            const tbody = document.getElementById('stocks-tbody');
+            
+            if (!stocks || stocks.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="text-center">銘柄データがありません</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = stocks.map(stock => {
+                const priceChange = stock.change_percent || 0;
+                const priceClass = priceChange >= 0 ? 'price-positive' : 'price-negative';
+                const priceSymbol = priceChange >= 0 ? '+' : '';
+
+                const prediction = stock.prediction_7d || 0;
+                const currentPrice = stock.current_price || 0;
+                const predictionChange = currentPrice > 0 ? ((prediction - currentPrice) / currentPrice * 100) : 0;
+                const predictionClass = predictionChange >= 0 ? 'prediction-arrow-up' : 'prediction-arrow-down';
+
+                const riskVar = stock.risk_var || 0;
+                const riskClass = riskVar < 2 ? 'risk-low' : riskVar < 5 ? 'risk-medium' : 'risk-high';
+
+                return `
+                    <tr>
+                        <td>
+                            <div>
+                                <strong>${stock.ticker}</strong>
+                                <br>
+                                <small class="text-muted">${stock.name || stock.ticker}</small>
+                            </div>
+                        </td>
+                        <td>
+                            <div>
+                                $${currentPrice.toFixed(2)}
+                                <br>
+                                <small class="${priceClass}">${priceSymbol}${priceChange.toFixed(2)}%</small>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="${predictionClass}">
+                                $${prediction.toFixed(2)}
+                                <br>
+                                <small class="text-muted">${predictionChange > 0 ? '+' : ''}${predictionChange.toFixed(1)}%</small>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="${riskClass}">${riskVar.toFixed(1)}%</span>
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <a href="/predict/${stock.ticker}" class="btn btn-primary btn-analysis">
+                                    <i class="fas fa-chart-line me-1"></i>予測
+                                </a>
+                                <a href="/risk/${stock.ticker}" class="btn btn-warning btn-analysis">
+                                    <i class="fas fa-exclamation-triangle me-1"></i>リスク
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // エラー表示
+        function showError(message) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+            alertDiv.innerHTML = `
+                <i class="fas fa-exclamation-circle me-2"></i>
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            const container = document.querySelector('.container');
+            container.insertBefore(alertDiv, container.firstChild);
+            
+            // 5秒後に自動で消去
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

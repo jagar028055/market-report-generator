@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Market Report Neo - リスク分析</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        .risk-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease;
+        }
+        .risk-card:hover {
+            transform: translateY(-2px);
+        }
+        .risk-metric {
+            text-align: center;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        .risk-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .risk-low { color: #28a745; }
+        .risk-medium { color: #ffc107; }
+        .risk-high { color: #dc3545; }
+        .risk-extreme { color: #6f42c1; }
+        
+        .control-panel {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        .chart-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            min-height: 400px;
+        }
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            border-radius: 10px;
+        }
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #ffc107;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .btn-analyze-risk {
+            background: linear-gradient(45deg, #ffc107, #fd7e14);
+            border: none;
+            color: white;
+            font-weight: bold;
+            padding: 12px 30px;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+        }
+        .btn-analyze-risk:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255,193,7,0.4);
+            color: white;
+        }
+        .ticker-badge {
+            background: linear-gradient(45deg, #dc3545, #fd7e14);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+        .risk-warning {
+            border-left: 4px solid #dc3545;
+            background: #f8d7da;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        .confidence-badge {
+            background: #17a2b8;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+        }
+        .simulation-info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-chart-line me-2"></i>Market Report Neo
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/">サマリー</a>
+                <a class="nav-link" href="/predict">予測分析</a>
+                <a class="nav-link active" href="/risk">リスク分析</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- パンくずリスト -->
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/" class="text-decoration-none">サマリー</a></li>
+                <li class="breadcrumb-item active">リスク分析</li>
+            </ol>
+        </nav>
+
+        <!-- ヘッダー -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <i class="fas fa-exclamation-triangle text-warning" style="font-size: 2.5rem;"></i>
+                    </div>
+                    <div>
+                        <h1 class="mb-1">リスク分析</h1>
+                        <p class="mb-0 text-muted">
+                            <span id="stock-info">
+                                {% if ticker %}
+                                    <span class="ticker-badge">{{ ticker }}</span>
+                                    <span class="ms-2">VaR・CVaR・モンテカルロシミュレーション</span>
+                                {% else %}
+                                    銘柄を選択してリスク評価を実行
+                                {% endif %}
+                            </span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 銘柄選択（tickerが指定されていない場合） -->
+        {% if not ticker %}
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-search me-2"></i>分析する銘柄を選択
+                        </h5>
+                        <div class="row">
+                            <div class="col-md-8">
+                                <select id="ticker-select" class="form-select">
+                                    <option value="">銘柄を選択してください...</option>
+                                    <option value="AAPL">AAPL - Apple Inc.</option>
+                                    <option value="GOOGL">GOOGL - Alphabet Inc.</option>
+                                    <option value="MSFT">MSFT - Microsoft Corp.</option>
+                                    <option value="TSLA">TSLA - Tesla Inc.</option>
+                                    <option value="NVDA">NVDA - NVIDIA Corp.</option>
+                                    <option value="AMZN">AMZN - Amazon.com Inc.</option>
+                                    <option value="META">META - Meta Platforms Inc.</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <button id="select-ticker-btn" class="btn btn-warning w-100" disabled>
+                                    <i class="fas fa-arrow-right me-2"></i>リスク分析開始
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <!-- コントロールパネル -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="control-panel position-relative" id="control-panel">
+                    <h5 class="mb-3">
+                        <i class="fas fa-sliders-h me-2"></i>リスク分析設定
+                    </h5>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <!-- 信頼度設定 -->
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">信頼度レベル:</label>
+                                <select id="confidence-select" class="form-select">
+                                    <option value="0.90">90%（低リスク評価）</option>
+                                    <option value="0.95" selected>95%（標準評価）</option>
+                                    <option value="0.99">99%（高リスク評価）</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <!-- シミュレーション期間 -->
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">シミュレーション期間:</label>
+                                <select id="days-select" class="form-select">
+                                    <option value="7">1週間</option>
+                                    <option value="30" selected>1ヶ月</option>
+                                    <option value="90">3ヶ月</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 分析実行ボタン -->
+                    <div class="text-center">
+                        <button id="analyze-risk-btn" class="btn btn-analyze-risk">
+                            <i class="fas fa-calculator me-2"></i>リスク分析実行
+                        </button>
+                    </div>
+
+                    <!-- ローディングオーバーレイ -->
+                    <div id="control-loading" class="loading-overlay" style="display: none;">
+                        <div class="text-center">
+                            <div class="loading-spinner mb-3"></div>
+                            <p class="mb-0">リスク計算中...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- リスク警告 -->
+        <div id="risk-warning" class="row mb-4" style="display: none;">
+            <div class="col-12">
+                <div class="risk-warning">
+                    <h6 class="mb-2">
+                        <i class="fas fa-exclamation-triangle me-2"></i>リスク評価について
+                    </h6>
+                    <p class="mb-0 small">
+                        VaR・CVaR値は過去のデータに基づく統計的推計であり、将来の損失を保証するものではありません。
+                        投資判断は総合的なリスク評価に基づいて行ってください。
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- VaR/CVaR表示 -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="risk-card">
+                    <h5 class="text-center mb-3">
+                        <i class="fas fa-chart-bar me-2"></i>VaR (Value at Risk)
+                    </h5>
+                    <div class="risk-metric">
+                        <div class="small text-muted">信頼度 <span id="var-confidence" class="confidence-badge">95%</span></div>
+                        <div id="var-value" class="risk-value">-</div>
+                        <div class="small text-muted" id="var-description">分析実行後に表示</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="risk-card">
+                    <h5 class="text-center mb-3">
+                        <i class="fas fa-chart-area me-2"></i>CVaR (Conditional VaR)
+                    </h5>
+                    <div class="risk-metric">
+                        <div class="small text-muted">信頼度 <span id="cvar-confidence" class="confidence-badge">95%</span></div>
+                        <div id="cvar-value" class="risk-value">-</div>
+                        <div class="small text-muted" id="cvar-description">分析実行後に表示</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- モンテカルロシミュレーション結果 -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="chart-container position-relative" id="montecarlo-container">
+                    <h5 class="mb-3">
+                        <i class="fas fa-dice me-2"></i>モンテカルロシミュレーション
+                    </h5>
+                    
+                    <!-- シミュレーション情報 -->
+                    <div id="simulation-info" class="simulation-info" style="display: none;">
+                        <div class="row text-center">
+                            <div class="col-md-3">
+                                <strong>シミュレーション回数</strong><br>
+                                <span id="sim-count">1,000回</span>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>期間</strong><br>
+                                <span id="sim-period">30日</span>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>最悪ケース</strong><br>
+                                <span id="sim-worst" class="risk-high">-</span>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>最良ケース</strong><br>
+                                <span id="sim-best" class="risk-low">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="montecarlo-chart" style="width: 100%; height: 450px;"></div>
+                    
+                    <!-- チャート用ローディング -->
+                    <div id="chart-loading" class="loading-overlay" style="display: none;">
+                        <div class="text-center">
+                            <div class="loading-spinner mb-3"></div>
+                            <p class="mb-0">シミュレーション実行中...</p>
+                        </div>
+                    </div>
+
+                    <!-- 初期メッセージ -->
+                    <div id="chart-empty-message" class="text-center py-5">
+                        <i class="fas fa-dice text-muted mb-3" style="font-size: 3rem;"></i>
+                        <h6 class="text-muted">リスク分析実行ボタンをクリックしてシミュレーション結果を表示</h6>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- リスク分析サマリー -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0">
+                            <i class="fas fa-clipboard-list me-2"></i>リスク分析サマリー
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="risk-summary">
+                            <p class="text-center text-muted py-4">
+                                リスク分析を実行すると詳細なサマリーが表示されます
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // グローバル変数
+        let currentTicker = '{{ ticker or "" }}';
+        let riskData = null;
+
+        // ページ読み込み時の初期化
+        document.addEventListener('DOMContentLoaded', function() {
+            {% if not ticker %}
+            initTickerSelection();
+            {% else %}
+            initRiskPage();
+            {% endif %}
+        });
+
+        // 銘柄選択の初期化
+        function initTickerSelection() {
+            const tickerSelect = document.getElementById('ticker-select');
+            const selectBtn = document.getElementById('select-ticker-btn');
+
+            tickerSelect.addEventListener('change', function() {
+                selectBtn.disabled = !this.value;
+            });
+
+            selectBtn.addEventListener('click', function() {
+                const selectedTicker = tickerSelect.value;
+                if (selectedTicker) {
+                    window.location.href = `/risk/${selectedTicker}`;
+                }
+            });
+        }
+
+        // リスク分析ページの初期化
+        function initRiskPage() {
+            const analyzeBtn = document.getElementById('analyze-risk-btn');
+            analyzeBtn.addEventListener('click', runRiskAnalysis);
+
+            // 設定変更時の信頼度表示更新
+            const confidenceSelect = document.getElementById('confidence-select');
+            confidenceSelect.addEventListener('change', updateConfidenceDisplay);
+
+            // 初期チャートメッセージを表示
+            showEmptyChartMessage();
+        }
+
+        // リスク分析の実行
+        async function runRiskAnalysis() {
+            if (!currentTicker) return;
+
+            const confidence = parseFloat(document.getElementById('confidence-select').value);
+            const days = parseInt(document.getElementById('days-select').value);
+
+            // ローディング表示
+            showLoading();
+            showRiskWarning();
+
+            try {
+                // APIを呼び出し
+                const params = new URLSearchParams({
+                    confidence: confidence,
+                    days: days
+                });
+
+                const response = await fetch(`/api/risk/${currentTicker}?${params}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                riskData = await response.json();
+
+                if (riskData.status === 'success') {
+                    updateVarCvarDisplay(riskData.var_cvar);
+                    updateMonteCarloChart(riskData.monte_carlo_results);
+                    updateRiskSummary(riskData.var_cvar, riskData.monte_carlo_results);
+                } else {
+                    throw new Error(riskData.error || 'リスク分析エラー');
+                }
+
+            } catch (error) {
+                console.error('リスク分析エラー:', error);
+                showAlert('リスク分析の実行に失敗しました: ' + error.message, 'danger');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // VaR/CVaR表示の更新
+        function updateVarCvarDisplay(varCvarData) {
+            const confidence = parseFloat(document.getElementById('confidence-select').value);
+            const confidencePercent = Math.round(confidence * 100);
+
+            // VaR表示更新
+            const varValue = varCvarData.var || 0;
+            document.getElementById('var-value').textContent = formatRiskValue(varValue);
+            document.getElementById('var-value').className = `risk-value ${getRiskClass(Math.abs(varValue))}`;
+            document.getElementById('var-description').textContent = 
+                `${confidencePercent}%の確率で損失がこの値以下に収まる`;
+
+            // CVaR表示更新
+            const cvarValue = varCvarData.cvar || 0;
+            document.getElementById('cvar-value').textContent = formatRiskValue(cvarValue);
+            document.getElementById('cvar-value').className = `risk-value ${getRiskClass(Math.abs(cvarValue))}`;
+            document.getElementById('cvar-description').textContent = 
+                `VaRを超えた場合の平均的な損失額`;
+
+            updateConfidenceDisplay();
+        }
+
+        // モンテカルロチャートの更新
+        function updateMonteCarloChart(monteCarloData) {
+            if (!monteCarloData || !monteCarloData.simulations) {
+                showEmptyChartMessage();
+                return;
+            }
+
+            // シミュレーション情報の表示
+            const simInfo = document.getElementById('simulation-info');
+            const days = parseInt(document.getElementById('days-select').value);
+            
+            document.getElementById('sim-count').textContent = `${monteCarloData.num_simulations || 1000}回`;
+            document.getElementById('sim-period').textContent = `${days}日`;
+            document.getElementById('sim-worst').textContent = formatRiskValue(monteCarloData.worst_case || 0);
+            document.getElementById('sim-best').textContent = formatRiskValue(monteCarloData.best_case || 0);
+            simInfo.style.display = 'block';
+
+            // ヒストグラム用データ準備
+            const finalReturns = monteCarloData.final_returns || [];
+            
+            const trace = {
+                x: finalReturns,
+                type: 'histogram',
+                nbinsx: 50,
+                name: '収益分布',
+                marker: {
+                    color: 'rgba(255, 193, 7, 0.7)',
+                    line: {
+                        color: 'rgba(255, 193, 7, 1)',
+                        width: 1
+                    }
+                }
+            };
+
+            const layout = {
+                title: {
+                    text: `${currentTicker} モンテカルロシミュレーション結果 (${days}日後)`,
+                    font: { size: 18 }
+                },
+                xaxis: {
+                    title: '収益率 (%)',
+                    gridcolor: '#e9ecef'
+                },
+                yaxis: {
+                    title: '頻度',
+                    gridcolor: '#e9ecef'
+                },
+                margin: { t: 60, r: 30, b: 60, l: 60 },
+                plot_bgcolor: '#ffffff',
+                paper_bgcolor: '#ffffff',
+                showlegend: false
+            };
+
+            // VaRラインの追加
+            if (riskData && riskData.var_cvar && riskData.var_cvar.var) {
+                const varLine = {
+                    x: [riskData.var_cvar.var, riskData.var_cvar.var],
+                    y: [0, Math.max(...(monteCarloData.histogram_counts || [0]))],
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: 'VaR',
+                    line: {
+                        color: '#dc3545',
+                        width: 3,
+                        dash: 'dash'
+                    }
+                };
+                
+                const traces = [trace, varLine];
+                layout.showlegend = true;
+                Plotly.newPlot('montecarlo-chart', traces, layout, {
+                    responsive: true,
+                    displayModeBar: true,
+                    displaylogo: false
+                });
+            } else {
+                Plotly.newPlot('montecarlo-chart', [trace], layout, {
+                    responsive: true,
+                    displayModeBar: true,
+                    displaylogo: false
+                });
+            }
+
+            hideEmptyChartMessage();
+        }
+
+        // リスクサマリーの更新
+        function updateRiskSummary(varCvarData, monteCarloData) {
+            const confidence = parseFloat(document.getElementById('confidence-select').value);
+            const days = parseInt(document.getElementById('days-select').value);
+            
+            const varValue = Math.abs(varCvarData.var || 0);
+            const cvarValue = Math.abs(varCvarData.cvar || 0);
+            
+            let riskLevel = 'low';
+            if (varValue > 5) riskLevel = 'high';
+            else if (varValue > 2) riskLevel = 'medium';
+
+            const riskLabels = {
+                'low': { label: '低リスク', class: 'risk-low' },
+                'medium': { label: '中リスク', class: 'risk-medium' },
+                'high': { label: '高リスク', class: 'risk-high' }
+            };
+
+            const summary = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-chart-pie me-2"></i>リスク評価</h6>
+                        <p>総合リスクレベル: <span class="${riskLabels[riskLevel].class}">${riskLabels[riskLevel].label}</span></p>
+                        <p>信頼度${Math.round(confidence * 100)}%でのVaR: <strong>${formatRiskValue(varCvarData.var || 0)}</strong></p>
+                        <p>CVaR（条件付きVaR): <strong>${formatRiskValue(varCvarData.cvar || 0)}</strong></p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-dice me-2"></i>シミュレーション結果</h6>
+                        <p>分析期間: ${days}日</p>
+                        <p>最悪ケース: <strong class="risk-high">${formatRiskValue(monteCarloData.worst_case || 0)}</strong></p>
+                        <p>最良ケース: <strong class="risk-low">${formatRiskValue(monteCarloData.best_case || 0)}</strong></p>
+                    </div>
+                </div>
+                <div class="alert alert-info mt-3">
+                    <strong>解釈:</strong> 
+                    VaR値は「${Math.round(confidence * 100)}%の確率で、${days}日間の損失がこの値以下に収まる」ことを示します。
+                    CVaRは「VaRを超えた場合の平均的な損失額」を表しています。
+                </div>
+            `;
+
+            document.getElementById('risk-summary').innerHTML = summary;
+        }
+
+        // 信頼度表示の更新
+        function updateConfidenceDisplay() {
+            const confidence = parseFloat(document.getElementById('confidence-select').value);
+            const confidencePercent = Math.round(confidence * 100);
+            
+            document.getElementById('var-confidence').textContent = `${confidencePercent}%`;
+            document.getElementById('cvar-confidence').textContent = `${confidencePercent}%`;
+        }
+
+        // リスク値のフォーマット
+        function formatRiskValue(value) {
+            if (value === null || value === undefined || isNaN(value)) return '-';
+            return `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`;
+        }
+
+        // リスククラスの決定
+        function getRiskClass(absValue) {
+            if (absValue > 10) return 'risk-extreme';
+            if (absValue > 5) return 'risk-high';
+            if (absValue > 2) return 'risk-medium';
+            return 'risk-low';
+        }
+
+        // ローディング表示
+        function showLoading() {
+            document.getElementById('control-loading').style.display = 'flex';
+            document.getElementById('chart-loading').style.display = 'flex';
+        }
+
+        // ローディング非表示
+        function hideLoading() {
+            document.getElementById('control-loading').style.display = 'none';
+            document.getElementById('chart-loading').style.display = 'none';
+        }
+
+        // リスク警告表示
+        function showRiskWarning() {
+            document.getElementById('risk-warning').style.display = 'block';
+        }
+
+        // 空のチャートメッセージ表示
+        function showEmptyChartMessage() {
+            document.getElementById('chart-empty-message').style.display = 'block';
+        }
+
+        // 空のチャートメッセージ非表示
+        function hideEmptyChartMessage() {
+            document.getElementById('chart-empty-message').style.display = 'none';
+        }
+
+        // アラート表示
+        function showAlert(message, type = 'info') {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+            alertDiv.innerHTML = `
+                <i class="fas fa-${type === 'danger' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'} me-2"></i>
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            const container = document.querySelector('.container');
+            container.insertBefore(alertDiv, container.firstChild);
+            
+            // 5秒後に自動で消去
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
