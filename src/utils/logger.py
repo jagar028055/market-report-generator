@@ -13,7 +13,20 @@ from functools import wraps
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-from config import Config
+try:
+    from src.config import Config
+except ImportError:
+    try:
+        from config import Config
+    except ImportError:
+        # フォールバック用の最小設定クラス
+        class Config:
+            def __init__(self):
+                self.LOG_LEVEL = "INFO"
+                self.LOG_FILE = "logs/market_report.log"
+                self.LOG_MAX_BYTES = 10485760
+                self.LOG_BACKUP_COUNT = 5
+                self.ENVIRONMENT = "development"
 
 class JSONFormatter(logging.Formatter):
     """JSON形式のログフォーマッター"""
@@ -61,6 +74,10 @@ class MetricsLogger:
         
         # JSON形式のフォーマッター
         json_formatter = JSONFormatter()
+        
+        # ログディレクトリの作成
+        log_file_path = Path(self.config.LOG_FILE)
+        log_file_path.parent.mkdir(parents=True, exist_ok=True)
         
         # ファイルハンドラー（ローテーション対応）
         file_handler = logging.handlers.RotatingFileHandler(
@@ -337,6 +354,10 @@ def setup_application_logging(config: Optional[Config] = None):
     
     # JSON形式のフォーマッター
     json_formatter = JSONFormatter()
+    
+    # ログディレクトリの作成
+    log_file_path = Path(config.LOG_FILE)
+    log_file_path.parent.mkdir(parents=True, exist_ok=True)
     
     # ファイルハンドラー
     file_handler = logging.handlers.RotatingFileHandler(

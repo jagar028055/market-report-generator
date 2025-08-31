@@ -750,6 +750,68 @@ class DataFetcher:
             # import traceback
             # traceback.print_exc()
             return pd.DataFrame()
+            
+    def get_individual_stock_data(self, ticker: str) -> dict:
+        """個別銘柄のデータを取得（API用）"""
+        try:
+            # 基本情報を取得
+            stock = yf.Ticker(ticker)
+            info = stock.info
+            
+            # 過去データを取得
+            historical_data = []
+            hist = stock.history(period="6mo")  # 過去6ヶ月
+            
+            for date, row in hist.iterrows():
+                historical_data.append({
+                    'date': date.strftime('%Y-%m-%d'),
+                    'close': float(row['Close']),
+                    'high': float(row['High']),
+                    'low': float(row['Low']),
+                    'open': float(row['Open']),
+                    'volume': int(row['Volume']) if not pd.isna(row['Volume']) else 0
+                })
+            
+            # 現在価格と変動率
+            current_price = info.get('currentPrice', info.get('regularMarketPrice', 0))
+            if not current_price and historical_data:
+                current_price = historical_data[-1]['close']
+            
+            previous_close = info.get('previousClose', 0)
+            if not previous_close and len(historical_data) > 1:
+                previous_close = historical_data[-2]['close']
+            
+            change_percent = 0
+            if previous_close and previous_close > 0:
+                change_percent = ((current_price - previous_close) / previous_close) * 100
+            
+            return {
+                'name': info.get('longName', info.get('shortName', ticker)),
+                'ticker': ticker,
+                'current_price': current_price,
+                'previous_close': previous_close,
+                'change_percent': change_percent,
+                'historical': historical_data,
+                'market_cap': info.get('marketCap', 0),
+                'volume': info.get('volume', 0)
+            }
+            
+        except Exception as e:
+            print(f"Error fetching data for {ticker}: {e}")
+            return {
+                'name': ticker,
+                'ticker': ticker,
+                'current_price': 0,
+                'previous_close': 0,
+                'change_percent': 0,
+                'historical': [],
+                'market_cap': 0,
+                'volume': 0
+            }
+    
+    def cleanup(self):
+        """リソースのクリーンアップ"""
+        pass
 
 if __name__ == "__main__":
     fetcher = DataFetcher()

@@ -16,7 +16,7 @@ try:
     from src.visualization.risk_dashboard import RiskDashboardGenerator
     from src.visualization.monte_carlo_viz import MonteCarloVisualizer
 except ImportError as e:
-    logger.warning(f"Analytics modules import warning: {e}. Using fallback implementations.")
+    print(f"Analytics modules import warning: {e}. Using fallback implementations.")
     EnsembleForecaster = None
     AccuracyEvaluator = None
     ForecastChartGenerator = None
@@ -25,9 +25,19 @@ except ImportError as e:
 from src.core.data_fetcher import DataFetcher
 from src.core.commentary_generator import CommentaryGenerator
 from src.utils.exceptions import MarketReportException
-from src.utils.logger import setup_logger
 
-logger = setup_logger(__name__)
+# logger設定（フォールバック対応）
+try:
+    from src.utils.logger import setup_logger
+    logger = setup_logger(__name__)
+except ImportError:
+    try:
+        from src.utils.setup_logger import setup_logger
+        logger = setup_logger(__name__)
+    except ImportError:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.setLevel(logging.INFO)
 
 # フォールバック実装クラス
 class FallbackForecaster:
@@ -227,9 +237,10 @@ def create_api_routes(app: Flask) -> None:
             }
             
             # AI市況コメント生成
+            economic_indicators = fetcher.get_economic_indicators()
             ai_commentary = commentary_gen.generate_market_commentary(
-                market_data=market_data,
-                economic_data=fetcher.get_economic_indicators()
+                news_articles=[],  # 空のニュース記事リストを渡す
+                economic_indicators=economic_indicators
             )
             
             # 主要銘柄の分析サマリー
